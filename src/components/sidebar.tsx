@@ -9,6 +9,7 @@ import {
   ListChecks,
   Settings,
   LineChart,
+  FolderGit2,
 } from 'lucide-react';
 import { useMeta } from '@/hooks/use-dashboard';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { label: 'Overview', href: '/', icon: Activity },
   { label: 'Runs', href: '/runs', icon: ListChecks },
   { label: 'Queues', href: '/queues', icon: GitBranch, selfHostedOnly: true },
+  { label: 'Repositories', href: '/repos', icon: FolderGit2 },
   { label: 'Settings', href: '/settings', icon: Settings, selfHostedOnly: true },
   {
     label: 'Observability',
@@ -91,12 +93,15 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-border p-3 text-xs text-muted-foreground">
-        {meta ? (
-          <span className="capitalize">{meta.deploymentMode} mode</span>
-        ) : (
-          <span>Loading mode…</span>
-        )}
+      <div className="border-t border-border p-3">
+        <div className="flex items-center justify-between">
+          {meta ? (
+            <span className="text-xs capitalize text-muted-foreground">{meta.deploymentMode} mode</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Loading mode…</span>
+          )}
+          <kbd className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">⌘K</kbd>
+        </div>
       </div>
     </aside>
   );

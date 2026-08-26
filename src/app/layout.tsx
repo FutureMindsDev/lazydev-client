@@ -4,6 +4,7 @@ import "./globals.css";
 import { SwrProvider } from "./swr-provider";
 import { MocksProvider } from "./mocks-provider";
 import { Sidebar } from "@/components/sidebar";
+import { CommandPalette } from "@/components/command-palette";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Sidebar />
               <main className="flex-1 overflow-x-hidden">{children}</main>
             </div>
+            <CommandPalette />
           </SwrProvider>
         </MocksProvider>
       </body>

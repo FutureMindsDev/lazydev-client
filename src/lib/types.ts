@@ -12,7 +12,7 @@
  * NOTE on pipeline node names: the actual LangGraph nodes are
  * `onboarding | analyzer | research | tools | planner | patcher | validator |
  * human_feedback | git` — the plan doc's "researcher" label is a friendly name
- * for the `research` node. Corrected here for the future Run Detail screen.
+ * for the `research` node. Corrected here for the Run Detail screen.
  */
 
 export type RunStatus = 'SUCCESS' | 'FAILED';
@@ -59,12 +59,60 @@ export interface FeedbackRequest {
   feedback: string;
 }
 
-/** Phase 2 SSE event — included now so the type surface is complete. */
+/** POST /api/dashboard/runs/:taskId/feedback response */
+export interface FeedbackResponse {
+  ok: boolean;
+  pending: boolean;
+}
+
+/** GET /api/dashboard/runs/:taskId/feedback-status */
+export interface FeedbackStatus {
+  pending: boolean;
+  submittedAt: string | null;
+}
+
+/** Phase 2 SSE event — per-task pipeline events. */
 export interface PipelineEvent {
   taskId: string;
-  node: 'onboarding' | 'analyzer' | 'research' | 'tools' | 'planner' | 'patcher' | 'validator' | 'human_feedback' | 'git';
+  node: PipelineNode;
   status: 'started' | 'completed' | 'failed';
   payload?: string;
+  attempt?: number;
+  timestamp: string;
+}
+
+/** Pipeline node names matching the actual LangGraph graph. */
+export type PipelineNode =
+  | 'onboarding'
+  | 'analyzer'
+  | 'research'
+  | 'tools'
+  | 'planner'
+  | 'patcher'
+  | 'validator'
+  | 'human_feedback'
+  | 'git';
+
+/** A single pipeline stage's rendered state for the timeline. */
+export interface PipelineStage {
+  node: PipelineNode;
+  label: string;
+  status: 'pending' | 'active' | 'completed' | 'failed';
+  output?: string;
+  attempt?: number;
+}
+
+/** Full run detail — extends AuditLogDto with pipeline state slices. */
+export interface RunDetailDto extends AuditLogDto {
+  repo?: string;
+  branch?: string;
+  prUrl?: string | null;
+  unappliedChanges?: string | null;
+  triageContext?: string | null;
+  researchContext?: string | null;
+  implementationPlan?: string | null;
+  pipelineStages?: PipelineStage[];
+  feedbackStatus?: FeedbackStatus;
 }
 
 /** BullMQ job-state keys present in getJobCounts() output. */
@@ -75,6 +123,67 @@ export type JobStateKey =
   | 'failed'
   | 'delayed'
   | 'paused';
+
+/** A single BullMQ job for the queue inspector. */
+export interface QueueJob {
+  id: string;
+  name: string;
+  state: JobStateKey;
+  attempts: number;
+  data: Record<string, unknown>;
+  failedReason?: string | null;
+  stackTrace?: string | null;
+  timestamp: string;
+  processedOn?: string | null;
+  finishedOn?: string | null;
+}
+
+/** Paginated jobs response. */
+export interface PaginatedJobs {
+  items: QueueJob[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Repository/installation card data. */
+export interface RepositoryDto {
+  id: string;
+  owner: string;
+  name: string;
+  fullName: string;
+  defaultBranch: string;
+  onboardingStatus: 'pending' | 'indexed' | 'failed' | 'in_progress';
+  indexedFiles: number;
+  lastSync: string | null;
+  autoFix: boolean;
+  installationId: number | null;
+}
+
+/** Settings/config display (Mode A only, secrets masked). */
+export interface SettingsDto {
+  llm: {
+    provider: 'openai' | 'ollama' | 'gemini' | 'deepseek';
+    model: string;
+    fallbackModel: string | null;
+  };
+  sandbox: {
+    networkMode: 'none' | 'restricted' | 'unrestricted';
+    timeout: number;
+  };
+  notifications: {
+    discord: boolean;
+    discordWebhookMasked: string | null;
+  };
+  queue: {
+    concurrency: number;
+    maxAttempts: number;
+  };
+  database: {
+    type: string;
+    hostMasked: string;
+  };
+}
 
 /** A single run row for the recent-runs table (subset of AuditLogDto). */
 export interface RecentRun {
