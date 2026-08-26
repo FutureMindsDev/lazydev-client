@@ -7,3 +7,37 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Project: LazyDev Frontend
+
+Control-plane UI for the Lazy Issue Resolver NestJS backend (separate repo at
+`../lazy-issue-resolver`). See `docs/` for the full UI plan.
+
+### Commands
+- `pnpm dev` — dev server on :3000 (mocks enabled by default)
+- `pnpm build` — production build (Turbopack)
+- `pnpm lint` — eslint
+- `pnpm start` — serve production build
+
+### Mock vs real backend
+- `NEXT_PUBLIC_ENABLE_MOCKS=true` (default): MSW intercepts API calls; no
+  backend needed. Set to `false` in `.env.local` to hit the real backend at
+  `NEXT_PUBLIC_API_URL` (default `http://localhost:3200`).
+- The `/metrics` mock fixture mirrors the real backend response shape exactly
+  (`src/mocks/data.ts`), so flipping the flag needs zero component changes.
+
+### Architecture notes
+- Mode A (self-hosted) first; Mode B (hosted/multi-tenant) is an additive
+  layer. `src/lib/api.ts` is tenancy-aware (optional `installationId` scope).
+- Sidebar nav items are mode-gated via `/api/dashboard/meta` (Queues, Settings,
+  Observability only render in self-hosted mode).
+- Data contracts in `src/lib/types.ts` mirror backend DTOs/entities exactly.
+- The actual LangGraph node names are `research` (not "researcher"), `tools`,
+  and `human_feedback` — corrected from the plan doc for the future Run Detail.
+
+### Dependency version notes (verified during setup)
+- `lucide-react@1.34.0`: no `Github` icon export; use `Bot` for branding.
+- `@tanstack/react-table@9.1.2`: new API (`useTable`/`createCoreRowModel`,
+  not `useReactTable`/`getCoreRowModel`). Not yet wired — the Overview's
+  10-row table renders directly; TanStack will be used for the future
+  paginated Runs list.

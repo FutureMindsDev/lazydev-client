@@ -10,8 +10,9 @@ const ENABLE_MOCKS = process.env.NEXT_PUBLIC_ENABLE_MOCKS !== 'false';
  * Gate is NEXT_PUBLIC_ENABLE_MOCKS (default: enabled). Set to 'false' in
  * .env.local to hit the real backend at NEXT_PUBLIC_API_URL.
  *
- * When mocks are disabled, ready starts true and no effect runs. When enabled,
- * ready starts false and flips to true once the worker has started.
+ * Robust against environments where service workers can't register (e.g.
+ * browser preview proxies): if worker.start() rejects or times out, we
+ * proceed anyway — SWR will handle any resulting network errors gracefully.
  */
 export function MocksProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!ENABLE_MOCKS);
@@ -19,16 +20,38 @@ export function MocksProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ENABLE_MOCKS) return;
     let active = true;
+
+    // Safety net: never hang the UI longer than 5s waiting for the SW.
+    const timeout = setTimeout(() => {
+      if (active) {
+        console.warn('[mocks] MSW worker did not start within 5s — proceeding without mocks');
+        setReady(true);
+      }
+    }, 5_000);
+
     (async () => {
-      const { worker } = await import('@/mocks/browser');
-      await worker.start({
-        onUnhandledRequest: 'bypass',
-        quiet: false,
-      });
-      if (active) setReady(true);
+      try {
+        const { worker } = await import('@/mocks/browser');
+        await worker.start({
+          onUnhandledRequest: 'bypass',
+          quiet: false,
+        });
+        if (active) {
+          clearTimeout(timeout);
+          setReady(true);
+        }
+      } catch (err) {
+        console.warn('[mocks] MSW worker failed to start — proceeding without mocks:', err);
+        if (active) {
+          clearTimeout(timeout);
+          setReady(true);
+        }
+      }
     })();
+
     return () => {
       active = false;
+      clearTimeout(timeout);
     };
   }, []);
 
