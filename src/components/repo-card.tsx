@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { GitBranch, RefreshCw, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
+import { GitBranch, RefreshCw, FileText, ToggleLeft, ToggleRight, ChevronDown, ChevronRight, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
+import { RepoStats } from '@/components/repo-stats';
 import { timeAgo, cn } from '@/lib/utils';
 import type { RepositoryDto } from '@/lib/types';
 
@@ -22,13 +24,18 @@ const statusConfig = {
 export function RepoCard({ repo }: { repo: RepositoryDto }) {
   const [syncing, setSyncing] = useState(false);
   const [autoFix, setAutoFix] = useState(repo.autoFix);
+  const [showStats, setShowStats] = useState(false);
   const cfg = statusConfig[repo.onboardingStatus];
+  const { toast } = useToast();
 
   const handleResync = async () => {
     setSyncing(true);
     try {
       const { api } = await import('@/lib/api');
       await api.resyncRepo(repo.id);
+      toast({ title: 'Re-sync started', description: repo.fullName, variant: 'info' });
+    } catch {
+      toast({ title: 'Re-sync failed', description: repo.fullName, variant: 'error' });
     } finally {
       setSyncing(false);
     }
@@ -83,6 +90,21 @@ export function RepoCard({ repo }: { repo: RepositoryDto }) {
             {syncing ? 'Syncing…' : 'Re-sync'}
           </Button>
         </div>
+
+        {/* Expandable Qdrant index stats (Phase 3, plan §4.5) */}
+        <button
+          onClick={() => setShowStats(!showStats)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {showStats ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          <Database className="h-3.5 w-3.5" />
+          Index stats
+        </button>
+        {showStats && (
+          <div className="border-t border-border pt-3">
+            <RepoStats repoId={repo.id} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

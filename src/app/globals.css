@@ -44,8 +44,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark mode: applied via .dark class on <html> (ThemeProvider) OR system preference */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #09090b;
     --foreground: #ededed;
     --card: #111113;
@@ -56,6 +57,27 @@
     --input: #27272a;
     --ring: #60a5fa;
   }
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #ededed;
+  --card: #111113;
+  --card-foreground: #ededed;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #60a5fa;
+}
+
+/* Toast slide-in animation */
+@keyframes slide-in-from-bottom {
+  from { transform: translateY(0.5rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-in {
+  animation: slide-in-from-bottom 0.2s ease-out;
 }
 
 body {

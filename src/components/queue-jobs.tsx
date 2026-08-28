@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { RotateCcw, Trash2, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { useJobs, useMetrics } from '@/hooks/use-dashboard';
 import { timeAgo, cn } from '@/lib/utils';
 import type { JobStateKey } from '@/lib/types';
@@ -28,6 +29,7 @@ export function QueueJobs() {
   const { data: metrics } = useMetrics();
   const { data, error, isLoading, mutate } = useJobs(QUEUE_NAME, activeTab);
   const jobs = data?.items ?? [];
+  const { toast } = useToast();
 
   const counts = metrics?.queues?.[QUEUE_NAME] ?? {};
 
@@ -37,9 +39,11 @@ export function QueueJobs() {
       const { api } = await import('@/lib/api');
       await api.retryJob(QUEUE_NAME, jobId);
       setActionMsg(`Retried job ${jobId}`);
+      toast({ title: 'Job retried', description: jobId, variant: 'success' });
       mutate();
     } catch {
       setActionMsg('Retry failed');
+      toast({ title: 'Retry failed', description: jobId, variant: 'error' });
     }
   };
 
@@ -49,9 +53,11 @@ export function QueueJobs() {
       const { api } = await import('@/lib/api');
       const result = await api.drainQueue(QUEUE_NAME, activeTab);
       setActionMsg(`Drained ${result.count} jobs`);
+      toast({ title: 'Queue drained', description: `${result.count} ${activeTab} jobs removed`, variant: 'warning' });
       mutate();
     } catch {
       setActionMsg('Drain failed');
+      toast({ title: 'Drain failed', variant: 'error' });
     }
   };
 

@@ -10,6 +10,7 @@ import {
   Settings,
   LineChart,
   FolderGit2,
+  LogIn,
 } from 'lucide-react';
 import { useMeta } from '@/hooks/use-dashboard';
 import { cn } from '@/lib/utils';
@@ -94,6 +95,28 @@ export function Sidebar() {
         })}
       </nav>
       <div className="border-t border-border p-3">
+        {/* Mode B: show login link when auth is required and no current user */}
+        {meta && meta.auth !== 'none' && !meta.currentUser && (
+          <Link
+            href="/login"
+            className="mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogIn className="h-4 w-4" />
+            Sign in
+          </Link>
+        )}
+        {/* Mode B: show current user when authenticated */}
+        {meta?.currentUser && (
+          <div className="mb-2 flex items-center gap-2 px-3 py-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element -- small avatar, next/image not worth the overhead */}
+            <img
+              src={meta.currentUser.avatarUrl}
+              alt=""
+              className="h-6 w-6 rounded-full"
+            />
+            <span className="text-xs text-muted-foreground">{meta.currentUser.login}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           {meta ? (
             <span className="text-xs capitalize text-muted-foreground">{meta.deploymentMode} mode</span>

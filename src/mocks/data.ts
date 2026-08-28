@@ -8,13 +8,16 @@
 
 import type {
   AuditLogDto,
+  AuthSession,
   DashboardMeta,
   DashboardMetrics,
   FeedbackStatus,
+  GrafanaConfig,
   Paginated,
   PaginatedJobs,
   PipelineStage,
   QueueJob,
+  RepoIndexStats,
   RepositoryDto,
   RunDetailDto,
   SettingsDto,
@@ -351,4 +354,104 @@ export const mockSettings = (): SettingsDto => ({
     type: 'postgres',
     hostMasked: '••••••••••••.rds.amazonaws.com',
   },
+});
+
+// ── Grafana embed config (Phase 3, plan §9) ───────────────────────────────
+
+export const mockGrafana = (): GrafanaConfig => ({
+  enabled: true,
+  baseUrl: 'http://localhost:3001',
+  dashboards: [
+    {
+      uid: 'lazydev-overview',
+      title: 'Run Overview',
+      embedUrl:
+        'http://localhost:3001/d-solo/lazydev-overview/run-overview?panelId=1&from=now-24h&to=now&theme=dark&kiosk=tv',
+      description: 'Success/failure rate over the last 24 hours',
+    },
+    {
+      uid: 'lazydev-queues',
+      title: 'Queue Depth',
+      embedUrl:
+        'http://localhost:3001/d-solo/lazydev-queues/queue-depth?panelId=2&from=now-6h&to=now&theme=dark&kiosk=tv',
+      description: 'BullMQ queue depth by state (waiting/active/failed)',
+    },
+    {
+      uid: 'lazydev-latency',
+      title: 'Pipeline Latency',
+      embedUrl:
+        'http://localhost:3001/d-solo/lazydev-latency/pipeline-latency?panelId=1&from=now-7d&to=now&theme=dark&kiosk=tv',
+      description: 'P50/P95 end-to-end run latency by stage',
+    },
+  ],
+});
+
+// ── Qdrant collection stats (Phase 3, plan §4.5) ──────────────────────────
+
+export const mockRepoStats = (repoId: string): RepoIndexStats => {
+  const stats: Record<string, RepoIndexStats> = {
+    'repo-001': {
+      repoId: 'repo-001',
+      collectionName: 'lazy-issue-resolver',
+      vectorSize: 1536,
+      distance: 'Cosine',
+      pointsCount: 3420,
+      indexedCount: 3420,
+      status: 'green',
+      diskUsageBytes: 28_500_000,
+      lastIndexedAt: day(1),
+    },
+    'repo-002': {
+      repoId: 'repo-002',
+      collectionName: 'my-portfolio',
+      vectorSize: 1536,
+      distance: 'Cosine',
+      pointsCount: 870,
+      indexedCount: 870,
+      status: 'green',
+      diskUsageBytes: 7_200_000,
+      lastIndexedAt: day(3),
+    },
+    'repo-003': {
+      repoId: 'repo-003',
+      collectionName: 'khinmemelatt-portfolio',
+      vectorSize: 1536,
+      distance: 'Cosine',
+      pointsCount: 450,
+      indexedCount: 120,
+      status: 'yellow',
+      diskUsageBytes: 3_800_000,
+      lastIndexedAt: day(0),
+    },
+    'repo-004': {
+      repoId: 'repo-004',
+      collectionName: 'experimental-app',
+      vectorSize: 1536,
+      distance: 'Cosine',
+      pointsCount: 0,
+      indexedCount: 0,
+      status: 'red',
+      diskUsageBytes: 0,
+      lastIndexedAt: null,
+    },
+  };
+  return (
+    stats[repoId] ?? {
+      repoId,
+      collectionName: 'unknown',
+      vectorSize: 1536,
+      distance: 'Cosine',
+      pointsCount: 0,
+      indexedCount: 0,
+      status: 'red',
+      diskUsageBytes: 0,
+      lastIndexedAt: null,
+    }
+  );
+};
+
+// ── Auth session (Phase 3, Mode B) ────────────────────────────────────────
+
+export const mockAuthSession = (): AuthSession => ({
+  authenticated: false,
 });

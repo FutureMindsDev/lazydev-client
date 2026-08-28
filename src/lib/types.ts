@@ -202,3 +202,44 @@ export interface ThroughputBucket {
   success: number;
   failed: number;
 }
+
+// ─── Phase 3 additions ────────────────────────────────────────────────
+
+/** GET /api/dashboard/grafana — Grafana embed config (Mode A, plan §9). */
+export interface GrafanaConfig {
+  enabled: boolean;
+  baseUrl: string;
+  dashboards: GrafanaDashboard[];
+}
+
+export interface GrafanaDashboard {
+  uid: string;
+  title: string;
+  /** Pre-built URL with panel IDs and time range for iframe embedding. */
+  embedUrl: string;
+  description?: string;
+}
+
+/** GET /api/dashboard/repos/:id/stats — Qdrant collection stats (plan §4.5). */
+export interface RepoIndexStats {
+  repoId: string;
+  collectionName: string;
+  vectorSize: number;
+  distance: 'Cosine' | 'Dot' | 'Euclid';
+  pointsCount: number;
+  indexedCount: number;
+  status: 'green' | 'yellow' | 'red';
+  diskUsageBytes: number;
+  lastIndexedAt: string | null;
+}
+
+/** GET /api/auth/session — current user session (Mode B, plan §4.7). */
+export interface AuthSession {
+  authenticated: boolean;
+  user?: {
+    login: string;
+    avatarUrl: string;
+    name: string | null;
+    installations: number[];
+  };
+}

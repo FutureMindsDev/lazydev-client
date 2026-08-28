@@ -6,6 +6,7 @@ import { KpiCard } from '@/components/kpi-card';
 import { QueueSnapshot } from '@/components/queue-snapshot';
 import { ThroughputChart } from '@/components/throughput-chart';
 import { RecentRunsTable } from '@/components/recent-runs-table';
+import { GrafanaPanel } from '@/components/grafana-panel';
 import { queueDepth, queueDepthBand } from '@/lib/utils';
 
 /** Overview screen (plan §4.1): 10-second answer to "is LazyDev healthy?" */
@@ -57,6 +58,8 @@ export default function OverviewPage() {
       <RecentRunsTable />
 
       <QueueSnapshot />
+
+      <GrafanaPanel />
     </div>
   );
 }

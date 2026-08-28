@@ -9,13 +9,16 @@
 
 import type {
   AuditLogDto,
+  AuthSession,
   DashboardMeta,
   DashboardMetrics,
   FeedbackRequest,
   FeedbackResponse,
   FeedbackStatus,
+  GrafanaConfig,
   Paginated,
   PaginatedJobs,
+  RepoIndexStats,
   RepositoryDto,
   RunDetailDto,
   RunStatus,
@@ -161,5 +164,27 @@ export const api = {
   /** GET /api/dashboard/settings — safe config display (secrets masked). */
   getSettings(): Promise<SettingsDto> {
     return getJson<SettingsDto>('/api/dashboard/settings');
+  },
+
+  // ── Phase 3 additions ──────────────────────────────────────────────────
+
+  /** GET /api/dashboard/grafana — Grafana embed config (Mode A, plan §9). */
+  getGrafanaConfig(): Promise<GrafanaConfig> {
+    return getJson<GrafanaConfig>('/api/dashboard/grafana');
+  },
+
+  /** GET /api/dashboard/repos/:id/stats — Qdrant collection stats (plan §4.5). */
+  getRepoStats(repoId: string): Promise<RepoIndexStats> {
+    return getJson<RepoIndexStats>(`/api/dashboard/repos/${repoId}/stats`);
+  },
+
+  /** GET /api/auth/session — current user session (Mode B, plan §4.7). */
+  getAuthSession(): Promise<AuthSession> {
+    return getJson<AuthSession>('/api/auth/session');
+  },
+
+  /** POST /api/auth/logout — end session (Mode B). */
+  logout(): Promise<{ ok: boolean }> {
+    return postJson<{ ok: boolean }>('/api/auth/logout', {});
   },
 };

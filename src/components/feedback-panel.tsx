@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { api } from '@/lib/api';
 import { useFeedbackStatus } from '@/hooks/use-dashboard';
 
@@ -29,6 +30,7 @@ export function FeedbackPanel({ taskId, isTerminal }: FeedbackPanelProps) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: feedbackStatus } = useFeedbackStatus(taskId);
+  const { toast } = useToast();
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
@@ -38,9 +40,16 @@ export function FeedbackPanel({ taskId, isTerminal }: FeedbackPanelProps) {
       await api.sendFeedback(taskId, { feedback: text.trim() });
       setSubmitted(true);
       setText('');
+      toast({
+        title: 'Feedback submitted',
+        description: `Pending consumption by pipeline for ${taskId}`,
+        variant: 'success',
+      });
       setTimeout(() => setSubmitted(false), 5000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to submit feedback');
+      const msg = e instanceof Error ? e.message : 'Failed to submit feedback';
+      setError(msg);
+      toast({ title: 'Feedback failed', description: msg, variant: 'error' });
     } finally {
       setSubmitting(false);
     }

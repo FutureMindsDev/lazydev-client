@@ -8,6 +8,9 @@ import {
   mockJobs,
   mockRepos,
   mockSettings,
+  mockGrafana,
+  mockRepoStats,
+  mockAuthSession,
 } from './data';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
@@ -102,5 +105,40 @@ export const handlers = [
   http.get(`${BASE}/api/dashboard/settings`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockSettings());
+  }),
+
+  // ── Grafana (Phase 3) ──────────────────────────────────────────────────
+  http.get(`${BASE}/api/dashboard/grafana`, async () => {
+    await delay(LATENCY);
+    return HttpResponse.json(mockGrafana());
+  }),
+
+  // ── Repo index stats (Phase 3) ─────────────────────────────────────────
+  http.get(`${BASE}/api/dashboard/repos/:id/stats`, async ({ params }) => {
+    await delay(LATENCY);
+    return HttpResponse.json(mockRepoStats(String(params.id)));
+  }),
+
+  // ── Auth (Phase 3, Mode B) ─────────────────────────────────────────────
+  http.get(`${BASE}/api/auth/session`, async () => {
+    await delay(LATENCY);
+    return HttpResponse.json(mockAuthSession());
+  }),
+
+  http.post(`${BASE}/api/auth/logout`, async () => {
+    await delay(LATENCY);
+    return HttpResponse.json({ ok: true });
+  }),
+
+  // ── SSE events (Phase 3) — MSW doesn't support real SSE, so this returns
+  // a simple JSON response. The usePipelineEvents hook uses native EventSource
+  // which bypasses MSW in dev mode. This handler exists for completeness.
+  http.get(`${BASE}/api/dashboard/events`, async ({ request }) => {
+    const url = new URL(request.url);
+    const taskId = url.searchParams.get('taskId') ?? 'unknown';
+    return new HttpResponse(
+      `data: ${JSON.stringify({ taskId, node: 'onboarding', status: 'completed', timestamp: new Date().toISOString() })}\n\n`,
+      { headers: { 'Content-Type': 'text/event-stream' } },
+    );
   }),
 ];

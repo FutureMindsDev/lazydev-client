@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Copy, Check, ExternalLink, AlertTriangle, Play, Square, Radio } from 'lucide-react';
+import { ArrowLeft, Copy, Check, ExternalLink, AlertTriangle, Play, Square, Radio, Wifi } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/status-badge';
@@ -13,7 +13,8 @@ import { FailureForensics } from '@/components/failure-forensics';
 import { Button } from '@/components/ui/button';
 import { useRunDetail } from '@/hooks/use-dashboard';
 import { useSimulatedPipeline } from '@/hooks/use-simulated-pipeline';
-import { timeAgo } from '@/lib/utils';
+import { usePipelineEvents } from '@/hooks/use-pipeline-events';
+import { timeAgo, cn } from '@/lib/utils';
 
 /**
  * Run Detail — the flagship screen (plan §4.3).
@@ -26,10 +27,16 @@ export default function RunDetailPage() {
   const taskId = params.taskId;
   const { data: run, error, isLoading } = useRunDetail(taskId);
   const [copiedId, setCopiedId] = useState(false);
+  const [liveMode, setLiveMode] = useState<'simulate' | 'sse'>('simulate');
+  const [sseEnabled, setSseEnabled] = useState(false);
 
-  const { displayStages, isLive, currentNode, start, stop } = useSimulatedPipeline(
-    run?.pipelineStages,
-  );
+  const sim = useSimulatedPipeline(run?.pipelineStages);
+  const sse = usePipelineEvents(taskId, liveMode === 'sse' && sseEnabled);
+
+  // Active pipeline source based on mode
+  const displayStages = liveMode === 'sse' ? sse.stages : sim.displayStages;
+  const isLive = liveMode === 'sse' ? sse.isLive : sim.isLive;
+  const currentNode = liveMode === 'sse' ? undefined : sim.currentNode;
 
   if (isLoading) {
     return (
@@ -121,24 +128,72 @@ export default function RunDetailPage() {
             <CardTitle>Pipeline Timeline</CardTitle>
             {isLive && (
               <span className="flex items-center gap-1.5 rounded-full bg-active/15 px-2 py-0.5 text-xs text-active">
-                <Radio className="h-3 w-3 animate-pulse" /> Live · {currentNode}
+                <Radio className="h-3 w-3 animate-pulse" />
+                {liveMode === 'sse' ? 'SSE Live' : `Live · ${currentNode ?? ''}`}
               </span>
+            )}
+            {liveMode === 'sse' && sse.error && (
+              <span className="text-xs text-failed">{sse.error}</span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            {isLive ? (
-              <Button variant="outline" size="sm" onClick={stop}>
+            {/* Mode toggle: Simulate vs Real SSE */}
+            <div className="flex rounded-md border border-border">
+              <button
+                onClick={() => { setLiveMode('simulate'); setSseEnabled(false); }}
+                className={cn(
+                  'px-2.5 py-1 text-xs transition-colors',
+                  liveMode === 'simulate' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                Simulate
+              </button>
+              <button
+                onClick={() => setLiveMode('sse')}
+                className={cn(
+                  'flex items-center gap-1 px-2.5 py-1 text-xs transition-colors',
+                  liveMode === 'sse' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Wifi className="h-3 w-3" /> SSE
+              </button>
+            </div>
+            {/* Action button */}
+            {liveMode === 'sse' ? (
+              sseEnabled ? (
+                <Button variant="outline" size="sm" onClick={() => { setSseEnabled(false); sse.stop(); }}>
+                  <Square className="h-3 w-3" /> Disconnect
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setSseEnabled(true)}>
+                  <Play className="h-3 w-3" /> Connect
+                </Button>
+              )
+            ) : isLive ? (
+              <Button variant="outline" size="sm" onClick={sim.stop}>
                 <Square className="h-3 w-3" /> Stop
               </Button>
             ) : (
-              <Button variant="outline" size="sm" onClick={start}>
+              <Button variant="outline" size="sm" onClick={sim.start}>
                 <Play className="h-3 w-3" /> Simulate Live
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          {displayStages && <PipelineTimeline stages={displayStages} />}
+          {displayStages && displayStages.length > 0 ? (
+            <PipelineTimeline stages={displayStages} />
+          ) : liveMode === 'sse' && !sseEnabled ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Click &quot;Connect&quot; to subscribe to live SSE events from the backend.
+              <br />
+              <span className="text-xs">
+                Requires the real backend at {process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200'} with mocks disabled.
+              </span>
+            </p>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">No pipeline data.</p>
+          )}
         </CardContent>
       </Card>
 
