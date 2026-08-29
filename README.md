@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LazyDev Dashboard — Frontend
 
-## Getting Started
+Control-plane UI for [LazyDev](https://github.com/FutureMindsDev/lazy-issue-resolver),
+the AI-native autonomous CI assistant that monitors GitHub issues, generates
+validated code fixes, and pushes fix branches safely.
 
-First, run the development server:
+## What this is
+
+A Next.js 16 dashboard that makes the LazyDev AI pipeline a glass box:
+
+- **Overview** — 10-second answer to "is LazyDev healthy?" with KPIs, throughput
+  charts, and queue depth at a glance.
+- **Runs** — Paginated audit log of every issue the pipeline has processed,
+  with search and status filters.
+- **Run Detail** — The flagship screen: animated pipeline timeline showing each
+  LangGraph node (onboarding → analyzer → research → planner → patcher →
+  validator → git), diff viewer, human-in-the-loop feedback panel, and failure
+  forensics with one-click retry.
+- **Queues** — BullMQ job inspector with retry/drain actions (Mode A).
+- **Repositories** — Onboarded repo cards with indexing status, auto-fix toggle,
+  and Qdrant collection stats.
+- **Settings** — Read-only masked config display (Mode A).
+- **Command Palette** (⌘K) — Global search across all runs by issue #, title, or taskId.
+- **Live SSE** — Real-time pipeline events when the backend supports it, with a
+  simulation fallback for development.
+
+## Architecture
+
+- **Next.js 16** App Router + Turbopack
+- **Tailwind v4** dark-mode-first design system
+- **SWR** for polling + cache management
+- **MSW** (Mock Service Worker) for standalone dev — no backend needed
+- **Recharts** for throughput visualization
+- **Zod**-compatible TypeScript contracts mirroring backend DTOs exactly
+
+The frontend runs entirely against MSW mocks by default. Set
+`NEXT_PUBLIC_ENABLE_MOCKS=false` in `.env.local` to hit the real NestJS backend
+with zero code changes.
+
+See [`BACKEND_API_SPEC.md`](./BACKEND_API_SPEC.md) for the full API contract the
+frontend expects from the backend.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev          # http://localhost:3000 (mocks enabled by default)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To connect to the real backend:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+# Set NEXT_PUBLIC_ENABLE_MOCKS=false
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Related
 
-## Learn More
+- **Backend**: [FutureMindsDev/lazy-issue-resolver](https://github.com/FutureMindsDev/lazy-issue-resolver) — NestJS + LangGraph + BullMQ + Qdrant
+- **Backend API spec**: [`BACKEND_API_SPEC.md`](./BACKEND_API_SPEC.md)
+- **Verification checklist**: [`CHECKLIST.md`](./CHECKLIST.md)
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
