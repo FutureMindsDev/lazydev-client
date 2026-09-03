@@ -249,7 +249,7 @@ function makeJob(i: number, state: QueueJob['state']): QueueJob {
     data: {
       taskId: `task-${String(i + 1).padStart(4, '0')}`,
       issueNumber: 100 + i,
-      repo: REPOS[i % REPOS.length],
+      repository: REPOS[i % REPOS.length],
     },
     failedReason: isFailed ? JOB_ERRORS[i % JOB_ERRORS.length] : null,
     stackTrace: isFailed

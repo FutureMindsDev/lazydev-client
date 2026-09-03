@@ -8,7 +8,6 @@ import {
   GitBranch,
   ListChecks,
   Settings,
-  LineChart,
   FolderGit2,
   LogIn,
 } from 'lucide-react';
@@ -21,8 +20,6 @@ interface NavItem {
   icon: typeof Activity;
   /** Only render in self-hosted mode (plan §3). */
   selfHostedOnly?: boolean;
-  /** External link (Observability) rather than a route. */
-  external?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -31,13 +28,6 @@ const NAV: NavItem[] = [
   { label: 'Queues', href: '/queues', icon: GitBranch, selfHostedOnly: true },
   { label: 'Repositories', href: '/repos', icon: FolderGit2 },
   { label: 'Settings', href: '/settings', icon: Settings, selfHostedOnly: true },
-  {
-    label: 'Observability',
-    href: 'http://localhost:3000',
-    icon: LineChart,
-    selfHostedOnly: true,
-    external: true,
-  },
 ];
 
 export function Sidebar() {
@@ -56,28 +46,8 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {items.map((item) => {
           const active =
-            !item.external &&
-            (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href));
+            item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
           const Icon = item.icon;
-          const content = (
-            <>
-              <Icon className="h-4 w-4" aria-hidden />
-              <span>{item.label}</span>
-            </>
-          );
-          if (item.external) {
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                {content}
-              </a>
-            );
-          }
           return (
             <Link
               key={item.label}
@@ -89,7 +59,8 @@ export function Sidebar() {
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
-              {content}
+              <Icon className="h-4 w-4" aria-hidden />
+              <span>{item.label}</span>
             </Link>
           );
         })}

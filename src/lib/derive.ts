@@ -9,6 +9,14 @@
 
 import type { AuditLogDto, RecentRun, ThroughputBucket } from './types';
 
+/** Format a Date as YYYY-MM-DD in the user's local timezone (not UTC). */
+function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function deriveRecentRuns(runs: AuditLogDto[], limit: number): RecentRun[] {
   return [...runs]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -33,14 +41,15 @@ export function deriveThroughput(runs: AuditLogDto[], days: number): ThroughputB
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    buckets.push({ date: d.toISOString().slice(0, 10), success: 0, failed: 0 });
+    buckets.push({ date: localDateKey(d), success: 0, failed: 0 });
   }
 
   const idx = new Map(buckets.map((b, i) => [b.date, i]));
   const earliest = buckets[0]?.date;
 
   for (const r of runs) {
-    const day = r.createdAt.slice(0, 10);
+    // Convert the UTC timestamp to a local-date key so it matches bucket keys.
+    const day = localDateKey(new Date(r.createdAt));
     if (day < (earliest ?? day)) continue;
     const i = idx.get(day);
     if (i === undefined) continue;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMetrics } from '@/hooks/use-dashboard';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { StatusStrip } from '@/components/status-strip';
 import { KpiCard } from '@/components/kpi-card';
 import { QueueSnapshot } from '@/components/queue-snapshot';
@@ -11,9 +11,10 @@ import { queueDepth, queueDepthBand } from '@/lib/utils';
 
 /** Overview screen (plan §4.1): 10-second answer to "is LazyDev healthy?" */
 export default function OverviewPage() {
-  const { data, isLoading } = useMetrics();
-  const audit = data?.auditLogs;
-  const counts = data?.queues?.['issue-processing'];
+  const metrics = useDashboardStore((s) => s.metrics);
+  const isLoading = useDashboardStore((s) => s.metricsLoading);
+  const audit = metrics?.auditLogs;
+  const counts = metrics?.queues?.['issue-processing'];
 
   const successRate = audit && audit.total > 0
     ? Math.round((audit.success / audit.total) * 100)
