@@ -10,9 +10,9 @@ import { timeAgo, cn } from '@/lib/utils';
 import type { RepositoryDto } from '@/lib/types';
 
 const statusConfig = {
-  indexed: { label: 'Indexed', color: 'text-success', bg: 'bg-success/15' },
-  in_progress: { label: 'Syncing…', color: 'text-active', bg: 'bg-active/15' },
-  pending: { label: 'Pending', color: 'text-waiting', bg: 'bg-waiting/15' },
+  indexed: { label: 'Ready', color: 'text-success', bg: 'bg-success/15' },
+  in_progress: { label: 'Indexing…', color: 'text-active', bg: 'bg-active/15' },
+  pending: { label: 'Not indexed', color: 'text-waiting', bg: 'bg-waiting/15' },
   failed: { label: 'Failed', color: 'text-failed', bg: 'bg-failed/15' },
 } as const;
 
