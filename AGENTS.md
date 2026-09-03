@@ -29,11 +29,20 @@ Control-plane UI for the Lazy Issue Resolver NestJS backend (separate repo at
 ### Architecture notes
 - Mode A (self-hosted) first; Mode B (hosted/multi-tenant) is an additive
   layer. `src/lib/api.ts` is tenancy-aware (optional `installationId` scope).
-- Sidebar nav items are mode-gated via `/api/dashboard/meta` (Queues, Settings,
-  Observability only render in self-hosted mode).
+- Sidebar nav items are mode-gated via `/api/dashboard/meta` (Queues and
+  Settings only render in self-hosted mode).
 - Data contracts in `src/lib/types.ts` mirror backend DTOs/entities exactly.
 - The actual LangGraph node names are `research` (not "researcher"), `tools`,
   and `human_feedback` — corrected from the plan doc for the future Run Detail.
+- Shared dashboard data (runs list + metrics) lives in a Zustand store
+  (`src/stores/dashboard-store.ts`), fetched once at the app level by
+  `DashboardDataProvider` in `layout.tsx`. Components consume via
+  `useDashboardStore` selectors — no duplicate `/runs` or `/metrics` calls.
+  SWR is still used for entity-scoped queries (`useRunDetail`, `useJobs`,
+  `useRepos`, `useSettings`, `useRuns` for paginated/filtered lists).
+- When `NEXT_PUBLIC_ENABLE_MOCKS=false`, the `MocksProvider` unregisters any
+  stale MSW service worker from prior sessions. `NEXT_PUBLIC_*` vars are
+  inlined at build time — restart `pnpm dev` after changing `.env.local`.
 
 ### Dependency version notes (verified during setup)
 - `lucide-react@1.34.0`: no `Github` icon export; use `Bot` for branding.

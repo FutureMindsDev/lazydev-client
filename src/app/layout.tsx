@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SwrProvider } from "./swr-provider";
 import { MocksProvider } from "./mocks-provider";
+import { DashboardDataProvider } from "./dashboard-data-provider";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { CommandPalette } from "@/components/command-palette";
@@ -35,7 +36,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <MocksProvider>
             <SwrProvider>
-              <ToastProvider>
+              <DashboardDataProvider>
+                <ToastProvider>
                 <div className="flex min-h-screen">
                   <Sidebar />
                   <div className="flex flex-1 flex-col overflow-x-hidden">
@@ -46,7 +48,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   </div>
                 </div>
                 <CommandPalette />
-              </ToastProvider>
+                </ToastProvider>
+              </DashboardDataProvider>
             </SwrProvider>
           </MocksProvider>
         </ThemeProvider>

@@ -3,7 +3,8 @@
 import { FileCode2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/status-badge';
-import { useRunsOverview } from '@/hooks/use-dashboard';
+import { useDashboardStore } from '@/stores/dashboard-store';
+import { deriveRecentRuns } from '@/lib/derive';
 import { timeAgo } from '@/lib/utils';
 
 const COLUMNS = ['Issue', 'Title', 'Status', 'Attempts', 'Patch', 'Created'] as const;
@@ -17,7 +18,9 @@ const COLUMNS = ['Issue', 'Title', 'Status', 'Attempts', 'Patch', 'Created'] as 
  * matter.
  */
 export function RecentRunsTable() {
-  const { recentRuns, isLoading } = useRunsOverview(10);
+  const runs = useDashboardStore((s) => s.runs);
+  const isLoading = useDashboardStore((s) => s.runsLoading);
+  const recentRuns = deriveRecentRuns(runs, 10);
 
   return (
     <Card>
