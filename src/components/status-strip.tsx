@@ -1,12 +1,14 @@
 'use client';
 
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
-import { useMetrics } from '@/hooks/use-dashboard';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { timeAgo } from '@/lib/utils';
 
 /** Big status pill from /metrics `status` + last-updated + auto-refresh indicator. */
 export function StatusStrip() {
-  const { data, isLoading, error } = useMetrics();
+  const data = useDashboardStore((s) => s.metrics);
+  const isLoading = useDashboardStore((s) => s.metricsLoading);
+  const error = useDashboardStore((s) => s.metricsError);
 
   const operational = !error && data?.status === 'operational';
   const Icon = operational ? CheckCircle2 : AlertTriangle;

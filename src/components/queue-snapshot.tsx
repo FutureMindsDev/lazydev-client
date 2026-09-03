@@ -1,6 +1,6 @@
 'use client';
 
-import { useMetrics } from '@/hooks/use-dashboard';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { queueDepth } from '@/lib/utils';
 import type { JobStateKey } from '@/lib/types';
@@ -16,10 +16,11 @@ const SEGMENTS: { key: JobStateKey; label: string; color: string }[] = [
 
 /** Horizontal segmented bar of BullMQ counts (plan §4.1 queue snapshot). */
 export function QueueSnapshot() {
-  const { data, isLoading } = useMetrics();
-  const counts = data?.queues?.['issue-processing'] ?? {};
+  const metrics = useDashboardStore((s) => s.metrics);
+  const isLoading = useDashboardStore((s) => s.metricsLoading);
+  const counts = metrics?.queues?.['issue-processing'] ?? {};
 
-  if (isLoading && !data) {
+  if (isLoading && !metrics) {
     return (
       <Card>
         <CardHeader><CardTitle>Queue snapshot</CardTitle></CardHeader>

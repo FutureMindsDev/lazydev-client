@@ -18,7 +18,23 @@ export function MocksProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!ENABLE_MOCKS);
 
   useEffect(() => {
-    if (!ENABLE_MOCKS) return;
+    if (!ENABLE_MOCKS) {
+      // Unregister any lingering MSW service worker from a previous session
+      // where mocks were enabled. The SW registration persists across reloads
+      // and would otherwise intercept fetches even after ENABLE_MOCKS=false.
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+          .then((removed) => {
+            if (removed.some(Boolean)) {
+              console.info('[mocks] Unregistered stale MSW service worker(s)');
+            }
+          })
+          .catch(() => {});
+      }
+      return;
+    }
     let active = true;
 
     // Safety net: never hang the UI longer than 5s waiting for the SW.

@@ -10,12 +10,15 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRunsOverview } from '@/hooks/use-dashboard';
+import { useDashboardStore } from '@/stores/dashboard-store';
+import { deriveThroughput } from '@/lib/derive';
 import type { ThroughputBucket } from '@/lib/types';
 
 /** Stacked bar chart of SUCCESS vs FAILED per day, last 14 days (plan §4.1). */
 export function ThroughputChart() {
-  const { throughput, isLoading } = useRunsOverview();
+  const runs = useDashboardStore((s) => s.runs);
+  const isLoading = useDashboardStore((s) => s.runsLoading);
+  const throughput = deriveThroughput(runs, 14);
 
   const data: ThroughputBucket[] = throughput.map((b) => ({
     ...b,
@@ -39,7 +42,8 @@ export function ThroughputChart() {
                 tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--border)' }}
-                interval={1}
+                interval="preserveStartEnd"
+                minTickGap={20}
               />
               <YAxis
                 allowDecimals={false}
