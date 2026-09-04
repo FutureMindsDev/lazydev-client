@@ -12,11 +12,27 @@ import {
   mockRepoStats,
   mockAuthSession,
 } from './data';
+import type {
+  ByokSettingsDto,
+  UpdateLlmSettingsRequest,
+  ProviderConfigDto,
+  CreateProviderConfigRequest,
+  UpdateProviderConfigRequest,
+} from '@/lib/types';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
 
 // Small artificial delay so loading states are visible in the UI.
 const LATENCY = 300;
+
+// Mutable BYOK mock state — persists across requests within a dev session.
+let mockByokState: ByokSettingsDto = {
+  configured: false, scope: null, baseUrl: null, model: null, agentModelOverrides: null, agentAssignments: null, apiKeyHint: null, updatedAt: null,
+};
+
+// Mutable provider config mock state — array of saved provider configs.
+let mockProviders: ProviderConfigDto[] = [];
+let providerIdCounter = 0;
 
 export const handlers = [
   // ── Dashboard ──────────────────────────────────────────────────────────
@@ -104,7 +120,110 @@ export const handlers = [
   // ── Settings ───────────────────────────────────────────────────────────
   http.get(`${BASE}/api/dashboard/settings`, async () => {
     await delay(LATENCY);
-    return HttpResponse.json(mockSettings());
+    const base = mockSettings();
+    if (mockByokState.configured) {
+      base.llm.source = 'byok';
+      base.llm.model = mockByokState.model ?? base.llm.model;
+    }
+    base.byok = mockByokState;
+    base.providers = mockProviders;
+    return HttpResponse.json(base);
+  }),
+
+  http.put(`${BASE}/api/dashboard/settings/llm`, async ({ request }) => {
+    await delay(LATENCY);
+    const body = (await request.json()) as UpdateLlmSettingsRequest;
+    mockByokState = {
+      configured: true,
+      scope: body.installationId != null ? 'installation' : 'global',
+      baseUrl: body.baseUrl !== undefined ? body.baseUrl : mockByokState.baseUrl,
+      model: body.model !== undefined ? body.model : mockByokState.model,
+      agentModelOverrides:
+        body.agentModelOverrides !== undefined
+          ? body.agentModelOverrides
+          : mockByokState.agentModelOverrides,
+      agentAssignments:
+        body.agentAssignments !== undefined
+          ? body.agentAssignments
+          : mockByokState.agentAssignments,
+      apiKeyHint: body.apiKey ? `••••${body.apiKey.slice(-4)}` : mockByokState.apiKeyHint,
+      updatedAt: new Date().toISOString(),
+    };
+    return HttpResponse.json(mockByokState);
+  }),
+
+  http.delete(`${BASE}/api/dashboard/settings/llm`, async () => {
+    await delay(LATENCY);
+    mockByokState = { configured: false, scope: null, baseUrl: null, model: null, agentModelOverrides: null, agentAssignments: null, apiKeyHint: null, updatedAt: null };
+    return HttpResponse.json({ ok: true });
+  }),
+
+  // ── Provider config CRUD (multi-provider) ───────────────────────────────
+  http.get(`${BASE}/api/dashboard/settings/providers`, async () => {
+    await delay(LATENCY);
+    return HttpResponse.json(mockProviders);
+  }),
+
+  http.post(`${BASE}/api/dashboard/settings/providers`, async ({ request }) => {
+    await delay(LATENCY);
+    const body = (await request.json()) as CreateProviderConfigRequest;
+    if (!body.label?.trim() || !body.apiKey?.trim() || !body.model?.trim()) {
+      return new HttpResponse(JSON.stringify({ message: 'label, apiKey, and model are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const provider: ProviderConfigDto = {
+      id: `provider-${++providerIdCounter}`,
+      label: body.label.trim(),
+      baseUrl: body.baseUrl?.trim() || null,
+      model: body.model.trim(),
+      apiKeyHint: `••••${body.apiKey.slice(-4)}`,
+      updatedAt: new Date().toISOString(),
+    };
+    mockProviders = [...mockProviders, provider];
+    return HttpResponse.json(provider);
+  }),
+
+  http.put(`${BASE}/api/dashboard/settings/providers/:id`, async ({ params, request }) => {
+    await delay(LATENCY);
+    const id = String(params.id);
+    const body = (await request.json()) as UpdateProviderConfigRequest;
+    const idx = mockProviders.findIndex((p) => p.id === id);
+    if (idx === -1) {
+      return new HttpResponse(JSON.stringify({ message: 'not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    mockProviders = mockProviders.map((p) =>
+      p.id === id
+        ? {
+            ...p,
+            label: body.label !== undefined ? body.label.trim() : p.label,
+            model: body.model !== undefined ? body.model.trim() : p.model,
+            baseUrl: body.baseUrl !== undefined ? (body.baseUrl?.trim() || null) : p.baseUrl,
+            apiKeyHint: body.apiKey ? `••••${body.apiKey.slice(-4)}` : p.apiKeyHint,
+            updatedAt: new Date().toISOString(),
+          }
+        : p,
+    );
+    return HttpResponse.json(mockProviders.find((p) => p.id === id)!);
+  }),
+
+  http.delete(`${BASE}/api/dashboard/settings/providers/:id`, async ({ params }) => {
+    await delay(LATENCY);
+    const id = String(params.id);
+    mockProviders = mockProviders.filter((p) => p.id !== id);
+    // Clear any agent assignments pointing at this provider.
+    if (mockByokState.agentAssignments) {
+      const cleaned: Record<string, string> = {};
+      for (const [role, pid] of Object.entries(mockByokState.agentAssignments)) {
+        if (pid !== id) cleaned[role] = pid;
+      }
+      mockByokState.agentAssignments = Object.keys(cleaned).length > 0 ? cleaned : null;
+    }
+    return HttpResponse.json({ ok: true });
   }),
 
   // ── Grafana (Phase 3) ──────────────────────────────────────────────────

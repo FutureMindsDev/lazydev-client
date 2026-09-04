@@ -160,13 +160,93 @@ export interface RepositoryDto {
   installationId: number | null;
 }
 
-/** Settings/config display (Mode A only, secrets masked). */
+/** LLM provider ids surfaced by the settings API. */
+export type LlmProviderId =
+  | 'openai'
+  | 'ollama'
+  | 'gemini'
+  | 'deepseek'
+  | 'anthropic'
+  | 'openrouter'
+  | 'nvidia'
+  | 'zai'
+  | 'minimax'
+  | 'xiaomi'
+  | 'kimi'
+  | 'grok'
+  | 'custom';
+
+/** Masked, display-safe view of a saved provider config (never the key). */
+export interface ProviderConfigDto {
+  id: string;
+  label: string;
+  baseUrl: string | null;
+  model: string;
+  apiKeyHint: string | null;
+  updatedAt: string;
+}
+
+/** Masked, display-safe view of a stored BYOK config (never the full key). */
+export interface ByokSettingsDto {
+  configured: boolean;
+  /** Which row is effective: the installation's own, or the global fallback. */
+  scope: 'installation' | 'global' | null;
+  baseUrl: string | null;
+  model: string | null;
+  /** @deprecated — use agentAssignments for per-agent provider selection. */
+  agentModelOverrides: Record<string, string> | null;
+  /** Per-agent provider assignments (role → providerConfigId), or null. */
+  agentAssignments: Record<string, string> | null;
+  /** Last 4 chars of the stored key, for "••••abcd" style display. */
+  apiKeyHint: string | null;
+  updatedAt: string | null;
+}
+
+/** Body for PUT /api/dashboard/settings/llm (BYOK write). */
+export interface UpdateLlmSettingsRequest {
+  /** GitHub App installation to scope the config to; omit/null for global. */
+  installationId?: number | null;
+  /** Required when creating a config; omit to keep the stored key. */
+  apiKey?: string;
+  /** Optional — blank means "use the provider's default endpoint". */
+  baseUrl?: string | null;
+  /** Required when creating a config. */
+  model?: string;
+  /** @deprecated — use agentAssignments. */
+  agentModelOverrides?: Record<string, string> | null;
+  /** Per-agent provider assignments. null clears all; omit to leave unchanged. */
+  agentAssignments?: Record<string, string> | null;
+}
+
+/** Body for POST /api/dashboard/settings/providers (create a provider config). */
+export interface CreateProviderConfigRequest {
+  installationId?: number | null;
+  label: string;
+  apiKey: string;
+  baseUrl?: string | null;
+  model: string;
+}
+
+/** Body for PUT /api/dashboard/settings/providers/:id (update a provider config). */
+export interface UpdateProviderConfigRequest {
+  label?: string;
+  apiKey?: string;
+  baseUrl?: string | null;
+  model?: string;
+}
+
+/** Settings/config display — secrets masked, with BYOK LLM config support. */
 export interface SettingsDto {
   llm: {
-    provider: 'openai' | 'ollama' | 'gemini' | 'deepseek';
+    provider: LlmProviderId;
     model: string;
     fallbackModel: string | null;
+    /** 'byok' when a dashboard-submitted config is effective, else 'env'. */
+    source: 'byok' | 'env';
   };
+  byok: ByokSettingsDto;
+  /** Saved provider configs that can be assigned to specific agents. */
+  providers: ProviderConfigDto[];
   sandbox: {
     networkMode: 'none' | 'restricted' | 'unrestricted';
     timeout: number;

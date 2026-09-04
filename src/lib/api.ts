@@ -10,6 +10,7 @@
 import type {
   AuditLogDto,
   AuthSession,
+  ByokSettingsDto,
   DashboardMeta,
   DashboardMetrics,
   FeedbackRequest,
@@ -23,6 +24,10 @@ import type {
   RunDetailDto,
   RunStatus,
   SettingsDto,
+  UpdateLlmSettingsRequest,
+  ProviderConfigDto,
+  CreateProviderConfigRequest,
+  UpdateProviderConfigRequest,
 } from './types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
@@ -60,6 +65,29 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     throw new ApiError(res.status, `POST ${path} failed`, await res.text().catch(() => ''));
+  }
+  return res.json() as Promise<T>;
+}
+
+async function putJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `PUT ${path} failed`, await res.text().catch(() => ''));
+  }
+  return res.json() as Promise<T>;
+}
+
+async function deleteJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `DELETE ${path} failed`, await res.text().catch(() => ''));
   }
   return res.json() as Promise<T>;
 }
@@ -162,8 +190,40 @@ export const api = {
   // ── Settings (Mode A only) ─────────────────────────────────────────────
 
   /** GET /api/dashboard/settings — safe config display (secrets masked). */
-  getSettings(): Promise<SettingsDto> {
-    return getJson<SettingsDto>('/api/dashboard/settings');
+  getSettings(installationId?: number): Promise<SettingsDto> {
+    return getJson<SettingsDto>(withScope('/api/dashboard/settings', installationId));
+  },
+
+  /** PUT /api/dashboard/settings/llm — upsert BYOK LLM config. */
+  updateLlmSettings(body: UpdateLlmSettingsRequest): Promise<ByokSettingsDto> {
+    return putJson<ByokSettingsDto>('/api/dashboard/settings/llm', body);
+  },
+
+  /** DELETE /api/dashboard/settings/llm — remove BYOK config for a scope. */
+  deleteLlmSettings(installationId?: number): Promise<{ ok: boolean }> {
+    return deleteJson<{ ok: boolean }>(withScope('/api/dashboard/settings/llm', installationId));
+  },
+
+  // ── Provider config CRUD (multi-provider) ───────────────────────────────
+
+  /** GET /api/dashboard/settings/providers — list saved provider configs. */
+  listProviders(installationId?: number): Promise<ProviderConfigDto[]> {
+    return getJson<ProviderConfigDto[]>(withScope('/api/dashboard/settings/providers', installationId));
+  },
+
+  /** POST /api/dashboard/settings/providers — create a new provider config. */
+  createProvider(body: CreateProviderConfigRequest): Promise<ProviderConfigDto> {
+    return postJson<ProviderConfigDto>('/api/dashboard/settings/providers', body);
+  },
+
+  /** PUT /api/dashboard/settings/providers/:id — update a provider config. */
+  updateProvider(id: string, body: UpdateProviderConfigRequest, installationId?: number): Promise<ProviderConfigDto> {
+    return putJson<ProviderConfigDto>(withScope(`/api/dashboard/settings/providers/${id}`, installationId), body);
+  },
+
+  /** DELETE /api/dashboard/settings/providers/:id — delete a provider config. */
+  deleteProvider(id: string, installationId?: number): Promise<{ ok: boolean }> {
+    return deleteJson<{ ok: boolean }>(withScope(`/api/dashboard/settings/providers/${id}`, installationId));
   },
 
   // ── Phase 3 additions ──────────────────────────────────────────────────

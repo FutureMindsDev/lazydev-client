@@ -1,15 +1,21 @@
 'use client';
 
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
+import useSWRMutation from 'swr/mutation';
 import { api } from '@/lib/api';
 import type {
+  ByokSettingsDto,
   DashboardMeta,
   FeedbackStatus,
   PaginatedJobs,
+  ProviderConfigDto,
   RepositoryDto,
   RunDetailDto,
   RunStatus,
   SettingsDto,
+  UpdateLlmSettingsRequest,
+  CreateProviderConfigRequest,
+  UpdateProviderConfigRequest,
 } from '@/lib/types';
 
 /** /meta is static per session; fetch once. */
@@ -72,6 +78,72 @@ export function useRepos() {
 
 // ── Settings ──────────────────────────────────────────────────────────────
 
-export function useSettings() {
-  return useSWR<SettingsDto>('settings', () => api.getSettings());
+export function useSettings(installationId?: number) {
+  return useSWR<SettingsDto>(
+    installationId != null ? `settings?installationId=${installationId}` : 'settings',
+    () => api.getSettings(installationId),
+  );
+}
+
+/** PUT /api/dashboard/settings/llm — optimistically updates the settings cache. */
+export function useUpdateLlmSettings() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<ByokSettingsDto, Error, string, UpdateLlmSettingsRequest>(
+    'settings/llm',
+    (_key, { arg }) => api.updateLlmSettings(arg),
+    {
+      onSuccess: () => mutate('settings'),
+    },
+  );
+}
+
+/** DELETE /api/dashboard/settings/llm — clears the BYOK config. */
+export function useDeleteLlmSettings() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<{ ok: boolean }, Error, string, number | undefined>(
+    'settings/llm-delete',
+    (_key, { arg }) => api.deleteLlmSettings(arg),
+    {
+      onSuccess: () => mutate('settings'),
+    },
+  );
+}
+
+// ── Provider config CRUD (multi-provider) ──────────────────────────────────
+
+/** POST /api/dashboard/settings/providers — create a provider config. */
+export function useCreateProvider() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<ProviderConfigDto, Error, string, CreateProviderConfigRequest>(
+    'settings/providers/create',
+    (_key, { arg }) => api.createProvider(arg),
+    {
+      onSuccess: () => mutate('settings'),
+    },
+  );
+}
+
+/** PUT /api/dashboard/settings/providers/:id — update a provider config. */
+export function useUpdateProvider() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<
+    ProviderConfigDto,
+    Error,
+    string,
+    { id: string; body: UpdateProviderConfigRequest }
+  >('settings/providers/update', (_key, { arg }) => api.updateProvider(arg.id, arg.body), {
+    onSuccess: () => mutate('settings'),
+  });
+}
+
+/** DELETE /api/dashboard/settings/providers/:id — delete a provider config. */
+export function useDeleteProvider() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<{ ok: boolean }, Error, string, string>(
+    'settings/providers/delete',
+    (_key, { arg }) => api.deleteProvider(arg),
+    {
+      onSuccess: () => mutate('settings'),
+    },
+  );
 }
