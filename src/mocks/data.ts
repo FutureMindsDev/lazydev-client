@@ -8,7 +8,6 @@
 
 import type {
   AuditLogDto,
-  AuthSession,
   DashboardMeta,
   DashboardMetrics,
   FeedbackStatus,
@@ -76,7 +75,6 @@ function makeRun(i: number): AuditLogDto {
       ? `diff --git a/src/connection/pool.ts b/src/connection/pool.ts\nindex 1a2b3c4..5d6e7f8 100644\n--- a/src/connection/pool.ts\n+++ b/src/connection/pool.ts\n@@ -10,7 +10,7 @@\n export class ConnectionPool {\n   private maxConnections = 10;\n-  private pool: Connection[] = [];\n+  private pool: Connection[] = new Array(this.maxConnections);\n \n   acquire(): Connection {\n-    return this.pool.pop() ?? this.create();\n+    const conn = this.pool.find(c => c && !c.inUse) ?? this.create();\n+    if (conn) conn.inUse = true;\n+    return conn;\n   }\n \n   release(conn: Connection): void {\n-    this.pool.push(conn);\n+    conn.inUse = false;\n   }\n }\n`
       : null,
     createdAt: day(i),
-    installationId: null,
   };
 }
 
@@ -290,7 +288,6 @@ export const mockRepos = (): RepositoryDto[] => [
     indexedFiles: 342,
     lastSync: day(1),
     autoFix: true,
-    installationId: null,
   },
   {
     id: 'repo-002',
@@ -302,7 +299,6 @@ export const mockRepos = (): RepositoryDto[] => [
     indexedFiles: 87,
     lastSync: day(3),
     autoFix: true,
-    installationId: null,
   },
   {
     id: 'repo-003',
@@ -314,7 +310,6 @@ export const mockRepos = (): RepositoryDto[] => [
     indexedFiles: 45,
     lastSync: day(0),
     autoFix: false,
-    installationId: null,
   },
   {
     id: 'repo-004',
@@ -326,7 +321,6 @@ export const mockRepos = (): RepositoryDto[] => [
     indexedFiles: 0,
     lastSync: day(5),
     autoFix: false,
-    installationId: null,
   },
 ];
 
@@ -461,9 +455,3 @@ export const mockRepoStats = (repoId: string): RepoIndexStats => {
     }
   );
 };
-
-// ── Auth session (Phase 3, Mode B) ────────────────────────────────────────
-
-export const mockAuthSession = (): AuthSession => ({
-  authenticated: false,
-});

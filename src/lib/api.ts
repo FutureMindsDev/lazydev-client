@@ -1,15 +1,13 @@
 /**
- * Typed API client for the LazyDev NestJS backend.
+ * Typed API client for the LazyDev NestJS backend (self-hosted only).
  *
- * Tenancy-aware by design: every method accepts an optional `installationId`
- * scope. In Mode A (self-hosted) it is a no-op; in Mode B (hosted) it becomes
- * a query param so every request is installation-scoped — the hard wall the
- * plan §2.1/§10 requires. No exceptions, including Overview KPIs.
+ * Every endpoint maps 1:1 to the backend's /api/dashboard/* routes. There is
+ * no multi-tenant scoping — the self-hosted deployment serves a single
+ * installation.
  */
 
 import type {
   AuditLogDto,
-  AuthSession,
   ByokSettingsDto,
   DashboardMeta,
   DashboardMetrics,
@@ -33,18 +31,11 @@ import type {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
 
 interface ListRunsParams {
-  installationId?: number;
   repo?: string;
   limit?: number;
   offset?: number;
   status?: RunStatus;
   search?: string;
-}
-
-function withScope(path: string, installationId?: number): string {
-  if (installationId === undefined) return path;
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}installationId=${installationId}`;
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -121,7 +112,6 @@ export const api = {
   /** GET /api/dashboard/runs — paginated audit-log listing (planned endpoint). */
   listRuns(params: ListRunsParams = {}): Promise<Paginated<AuditLogDto>> {
     const qs = new URLSearchParams();
-    if (params.installationId !== undefined) qs.set('installationId', String(params.installationId));
     if (params.repo) qs.set('repo', params.repo);
     if (params.limit !== undefined) qs.set('limit', String(params.limit));
     if (params.offset !== undefined) qs.set('offset', String(params.offset));
@@ -132,29 +122,29 @@ export const api = {
   },
 
   /** GET /api/dashboard/runs/:taskId — single run detail (planned endpoint). */
-  getRun(taskId: string, installationId?: number): Promise<RunDetailDto> {
-    return getJson<RunDetailDto>(withScope(`/api/dashboard/runs/${taskId}`, installationId));
+  getRun(taskId: string): Promise<RunDetailDto> {
+    return getJson<RunDetailDto>(`/api/dashboard/runs/${taskId}`);
   },
 
   /** POST /api/dashboard/runs/:taskId/feedback — HITL (planned endpoint). */
-  sendFeedback(taskId: string, body: FeedbackRequest, installationId?: number): Promise<FeedbackResponse> {
-    return postJson<FeedbackResponse>(withScope(`/api/dashboard/runs/${taskId}/feedback`, installationId), body);
+  sendFeedback(taskId: string, body: FeedbackRequest): Promise<FeedbackResponse> {
+    return postJson<FeedbackResponse>(`/api/dashboard/runs/${taskId}/feedback`, body);
   },
 
   /** GET /api/dashboard/runs/:taskId/feedback-status — is feedback pending? */
-  getFeedbackStatus(taskId: string, installationId?: number): Promise<FeedbackStatus> {
-    return getJson<FeedbackStatus>(withScope(`/api/dashboard/runs/${taskId}/feedback-status`, installationId));
+  getFeedbackStatus(taskId: string): Promise<FeedbackStatus> {
+    return getJson<FeedbackStatus>(`/api/dashboard/runs/${taskId}/feedback-status`);
   },
 
   /** POST /api/dashboard/repos/:repo/issues/:number/retry — re-enqueue a failed issue. */
-  retryRun(repo: string, issueNumber: number, installationId?: number): Promise<{ ok: boolean; taskId: string }> {
+  retryRun(repo: string, issueNumber: number): Promise<{ ok: boolean; taskId: string }> {
     return postJson<{ ok: boolean; taskId: string }>(
-      withScope(`/api/dashboard/repos/${encodeURIComponent(repo)}/issues/${issueNumber}/retry`, installationId),
+      `/api/dashboard/repos/${encodeURIComponent(repo)}/issues/${issueNumber}/retry`,
       {},
     );
   },
 
-  // ── Queues (Mode A only) ───────────────────────────────────────────────
+  // ── Queues ─────────────────────────────────────────────────────────────
 
   /** GET /api/dashboard/queues/:name/jobs?state= — BullMQ job listing. */
   listJobs(queueName: string, state?: string, limit = 50, offset = 0): Promise<PaginatedJobs> {
@@ -178,8 +168,8 @@ export const api = {
   // ── Repositories ───────────────────────────────────────────────────────
 
   /** GET /api/dashboard/repos — list onboarded repos. */
-  listRepos(installationId?: number): Promise<RepositoryDto[]> {
-    return getJson<RepositoryDto[]>(withScope('/api/dashboard/repos', installationId));
+  listRepos(): Promise<RepositoryDto[]> {
+    return getJson<RepositoryDto[]>('/api/dashboard/repos');
   },
 
   /** POST /api/dashboard/repos/:id/resync — re-trigger index sync. */
@@ -187,11 +177,11 @@ export const api = {
     return postJson<{ ok: boolean }>(`/api/dashboard/repos/${repoId}/resync`, {});
   },
 
-  // ── Settings (Mode A only) ─────────────────────────────────────────────
+  // ── Settings ───────────────────────────────────────────────────────────
 
   /** GET /api/dashboard/settings — safe config display (secrets masked). */
-  getSettings(installationId?: number): Promise<SettingsDto> {
-    return getJson<SettingsDto>(withScope('/api/dashboard/settings', installationId));
+  getSettings(): Promise<SettingsDto> {
+    return getJson<SettingsDto>('/api/dashboard/settings');
   },
 
   /** PUT /api/dashboard/settings/llm — upsert BYOK LLM config. */
@@ -199,16 +189,16 @@ export const api = {
     return putJson<ByokSettingsDto>('/api/dashboard/settings/llm', body);
   },
 
-  /** DELETE /api/dashboard/settings/llm — remove BYOK config for a scope. */
-  deleteLlmSettings(installationId?: number): Promise<{ ok: boolean }> {
-    return deleteJson<{ ok: boolean }>(withScope('/api/dashboard/settings/llm', installationId));
+  /** DELETE /api/dashboard/settings/llm — remove BYOK config. */
+  deleteLlmSettings(): Promise<{ ok: boolean }> {
+    return deleteJson<{ ok: boolean }>('/api/dashboard/settings/llm');
   },
 
   // ── Provider config CRUD (multi-provider) ───────────────────────────────
 
   /** GET /api/dashboard/settings/providers — list saved provider configs. */
-  listProviders(installationId?: number): Promise<ProviderConfigDto[]> {
-    return getJson<ProviderConfigDto[]>(withScope('/api/dashboard/settings/providers', installationId));
+  listProviders(): Promise<ProviderConfigDto[]> {
+    return getJson<ProviderConfigDto[]>('/api/dashboard/settings/providers');
   },
 
   /** POST /api/dashboard/settings/providers — create a new provider config. */
@@ -217,18 +207,18 @@ export const api = {
   },
 
   /** PUT /api/dashboard/settings/providers/:id — update a provider config. */
-  updateProvider(id: string, body: UpdateProviderConfigRequest, installationId?: number): Promise<ProviderConfigDto> {
-    return putJson<ProviderConfigDto>(withScope(`/api/dashboard/settings/providers/${id}`, installationId), body);
+  updateProvider(id: string, body: UpdateProviderConfigRequest): Promise<ProviderConfigDto> {
+    return putJson<ProviderConfigDto>(`/api/dashboard/settings/providers/${id}`, body);
   },
 
   /** DELETE /api/dashboard/settings/providers/:id — delete a provider config. */
-  deleteProvider(id: string, installationId?: number): Promise<{ ok: boolean }> {
-    return deleteJson<{ ok: boolean }>(withScope(`/api/dashboard/settings/providers/${id}`, installationId));
+  deleteProvider(id: string): Promise<{ ok: boolean }> {
+    return deleteJson<{ ok: boolean }>(`/api/dashboard/settings/providers/${id}`);
   },
 
   // ── Phase 3 additions ──────────────────────────────────────────────────
 
-  /** GET /api/dashboard/grafana — Grafana embed config (Mode A, plan §9). */
+  /** GET /api/dashboard/grafana — Grafana embed config (plan §9). */
   getGrafanaConfig(): Promise<GrafanaConfig> {
     return getJson<GrafanaConfig>('/api/dashboard/grafana');
   },
@@ -236,15 +226,5 @@ export const api = {
   /** GET /api/dashboard/repos/:id/stats — Qdrant collection stats (plan §4.5). */
   getRepoStats(repoId: string): Promise<RepoIndexStats> {
     return getJson<RepoIndexStats>(`/api/dashboard/repos/${repoId}/stats`);
-  },
-
-  /** GET /api/auth/session — current user session (Mode B, plan §4.7). */
-  getAuthSession(): Promise<AuthSession> {
-    return getJson<AuthSession>('/api/auth/session');
-  },
-
-  /** POST /api/auth/logout — end session (Mode B). */
-  logout(): Promise<{ ok: boolean }> {
-    return postJson<{ ok: boolean }>('/api/auth/logout', {});
   },
 };

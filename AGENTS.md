@@ -8,10 +8,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Project: LazyDev Frontend
+## Project: LazyDev Frontend (Self-hosted)
 
-Control-plane UI for the Lazy Issue Resolver NestJS backend (separate repo at
-`../lazy-issue-resolver`). See `docs/` for the full UI plan.
+Self-hosted control-plane UI for the Lazy Issue Resolver NestJS backend
+(separate repo at `../lazy-issue-resolver`). See `docs/` for the full UI plan.
+This distribution supports a single self-hosted backend installation only —
+there is no multi-tenant / hosted-mode code path.
 
 ### Commands
 - `pnpm dev` — dev server on :3000 (mocks enabled by default)
@@ -27,10 +29,10 @@ Control-plane UI for the Lazy Issue Resolver NestJS backend (separate repo at
   (`src/mocks/data.ts`), so flipping the flag needs zero component changes.
 
 ### Architecture notes
-- Mode A (self-hosted) first; Mode B (hosted/multi-tenant) is an additive
-  layer. `src/lib/api.ts` is tenancy-aware (optional `installationId` scope).
-- Sidebar nav items are mode-gated via `/api/dashboard/meta` (Queues and
-  Settings only render in self-hosted mode).
+- Self-hosted only. `src/lib/api.ts` has no tenancy scoping — every call hits
+  the single backend installation directly.
+- All sidebar nav items (Overview, Runs, Queues, Repositories, Settings)
+  always render.
 - Data contracts in `src/lib/types.ts` mirror backend DTOs/entities exactly.
 - The actual LangGraph node names are `research` (not "researcher"), `tools`,
   and `human_feedback` — corrected from the plan doc for the future Run Detail.

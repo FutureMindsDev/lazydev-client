@@ -78,11 +78,8 @@ export function useRepos() {
 
 // ── Settings ──────────────────────────────────────────────────────────────
 
-export function useSettings(installationId?: number) {
-  return useSWR<SettingsDto>(
-    installationId != null ? `settings?installationId=${installationId}` : 'settings',
-    () => api.getSettings(installationId),
-  );
+export function useSettings() {
+  return useSWR<SettingsDto>('settings', () => api.getSettings());
 }
 
 /** PUT /api/dashboard/settings/llm — optimistically updates the settings cache. */
@@ -100,9 +97,9 @@ export function useUpdateLlmSettings() {
 /** DELETE /api/dashboard/settings/llm — clears the BYOK config. */
 export function useDeleteLlmSettings() {
   const { mutate } = useSWRConfig();
-  return useSWRMutation<{ ok: boolean }, Error, string, number | undefined>(
+  return useSWRMutation<{ ok: boolean }, Error, string, void>(
     'settings/llm-delete',
-    (_key, { arg }) => api.deleteLlmSettings(arg),
+    (_key) => api.deleteLlmSettings(),
     {
       onSuccess: () => mutate('settings'),
     },

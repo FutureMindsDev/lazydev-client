@@ -26,7 +26,7 @@ export interface DashboardMetrics {
   timestamp: string;
 }
 
-/** Maps audit_logs entity. Adds installationId for Mode B tenancy (null in Mode A). */
+/** Maps audit_logs entity. */
 export interface AuditLogDto {
   id: string;
   taskId: string;
@@ -37,14 +37,12 @@ export interface AuditLogDto {
   finalValidationFeedback: string | null;
   generatedPatch: string | null;
   createdAt: string;
-  installationId?: number | null;
 }
 
-/** GET /api/dashboard/meta — tells the UI which deployment mode it is in. */
+/** GET /api/dashboard/meta — deployment mode + auth discovery (self-hosted only). */
 export interface DashboardMeta {
-  deploymentMode: 'selfhosted' | 'hosted';
-  auth: 'none' | 'token' | 'github-oauth';
-  currentUser?: { login: string; avatarUrl: string; installations: number[] };
+  deploymentMode: 'selfhosted';
+  auth: 'none' | 'token';
 }
 
 export interface Paginated<T> {
@@ -157,7 +155,6 @@ export interface RepositoryDto {
   indexedFiles: number;
   lastSync: string | null;
   autoFix: boolean;
-  installationId: number | null;
 }
 
 /** LLM provider ids surfaced by the settings API. */
@@ -189,8 +186,8 @@ export interface ProviderConfigDto {
 /** Masked, display-safe view of a stored BYOK config (never the full key). */
 export interface ByokSettingsDto {
   configured: boolean;
-  /** Which row is effective: the installation's own, or the global fallback. */
-  scope: 'installation' | 'global' | null;
+  /** Which row is effective: the global fallback (self-hosted has one global scope). */
+  scope: 'global' | null;
   baseUrl: string | null;
   model: string | null;
   /** @deprecated — use agentAssignments for per-agent provider selection. */
@@ -204,8 +201,6 @@ export interface ByokSettingsDto {
 
 /** Body for PUT /api/dashboard/settings/llm (BYOK write). */
 export interface UpdateLlmSettingsRequest {
-  /** GitHub App installation to scope the config to; omit/null for global. */
-  installationId?: number | null;
   /** Required when creating a config; omit to keep the stored key. */
   apiKey?: string;
   /** Optional — blank means "use the provider's default endpoint". */
@@ -220,7 +215,6 @@ export interface UpdateLlmSettingsRequest {
 
 /** Body for POST /api/dashboard/settings/providers (create a provider config). */
 export interface CreateProviderConfigRequest {
-  installationId?: number | null;
   label: string;
   apiKey: string;
   baseUrl?: string | null;
@@ -311,15 +305,4 @@ export interface RepoIndexStats {
   status: 'green' | 'yellow' | 'red';
   diskUsageBytes: number;
   lastIndexedAt: string | null;
-}
-
-/** GET /api/auth/session — current user session (Mode B, plan §4.7). */
-export interface AuthSession {
-  authenticated: boolean;
-  user?: {
-    login: string;
-    avatarUrl: string;
-    name: string | null;
-    installations: number[];
-  };
 }

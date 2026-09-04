@@ -9,33 +9,25 @@ import {
   ListChecks,
   Settings,
   FolderGit2,
-  LogIn,
 } from 'lucide-react';
-import { useMeta } from '@/hooks/use-dashboard';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
   label: string;
   href: string;
   icon: typeof Activity;
-  /** Only render in self-hosted mode (plan §3). */
-  selfHostedOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
   { label: 'Overview', href: '/', icon: Activity },
   { label: 'Runs', href: '/runs', icon: ListChecks },
-  { label: 'Queues', href: '/queues', icon: GitBranch, selfHostedOnly: true },
+  { label: 'Queues', href: '/queues', icon: GitBranch },
   { label: 'Repositories', href: '/repos', icon: FolderGit2 },
-  { label: 'Settings', href: '/settings', icon: Settings, selfHostedOnly: true },
+  { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { data: meta } = useMeta();
-  const isSelfHosted = meta?.deploymentMode === 'selfhosted';
-
-  const items = NAV.filter((n) => !n.selfHostedOnly || isSelfHosted);
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card">
@@ -44,7 +36,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold">LazyDev</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
-        {items.map((item) => {
+        {NAV.map((item) => {
           const active =
             item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -66,34 +58,8 @@ export function Sidebar() {
         })}
       </nav>
       <div className="border-t border-border p-3">
-        {/* Mode B: show login link when auth is required and no current user */}
-        {meta && meta.auth !== 'none' && !meta.currentUser && (
-          <Link
-            href="/login"
-            className="mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <LogIn className="h-4 w-4" />
-            Sign in
-          </Link>
-        )}
-        {/* Mode B: show current user when authenticated */}
-        {meta?.currentUser && (
-          <div className="mb-2 flex items-center gap-2 px-3 py-1.5">
-            {/* eslint-disable-next-line @next/next/no-img-element -- small avatar, next/image not worth the overhead */}
-            <img
-              src={meta.currentUser.avatarUrl}
-              alt=""
-              className="h-6 w-6 rounded-full"
-            />
-            <span className="text-xs text-muted-foreground">{meta.currentUser.login}</span>
-          </div>
-        )}
         <div className="flex items-center justify-between">
-          {meta ? (
-            <span className="text-xs capitalize text-muted-foreground">{meta.deploymentMode} mode</span>
-          ) : (
-            <span className="text-xs text-muted-foreground">Loading mode…</span>
-          )}
+          <span className="text-xs text-muted-foreground">self-hosted mode</span>
           <kbd className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">⌘K</kbd>
         </div>
       </div>

@@ -10,7 +10,6 @@ import {
   mockSettings,
   mockGrafana,
   mockRepoStats,
-  mockAuthSession,
 } from './data';
 import type {
   ByokSettingsDto,
@@ -135,7 +134,7 @@ export const handlers = [
     const body = (await request.json()) as UpdateLlmSettingsRequest;
     mockByokState = {
       configured: true,
-      scope: body.installationId != null ? 'installation' : 'global',
+      scope: 'global',
       baseUrl: body.baseUrl !== undefined ? body.baseUrl : mockByokState.baseUrl,
       model: body.model !== undefined ? body.model : mockByokState.model,
       agentModelOverrides:
@@ -236,17 +235,6 @@ export const handlers = [
   http.get(`${BASE}/api/dashboard/repos/:id/stats`, async ({ params }) => {
     await delay(LATENCY);
     return HttpResponse.json(mockRepoStats(String(params.id)));
-  }),
-
-  // ── Auth (Phase 3, Mode B) ─────────────────────────────────────────────
-  http.get(`${BASE}/api/auth/session`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json(mockAuthSession());
-  }),
-
-  http.post(`${BASE}/api/auth/logout`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ ok: true });
   }),
 
   // ── SSE events (Phase 3) — MSW doesn't support real SSE, so this returns
