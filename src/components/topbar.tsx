@@ -20,7 +20,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur">
       {/* Search trigger (opens ⌘K palette) */}
       <button
         onClick={() => {
@@ -31,18 +31,18 @@ export function Topbar() {
             bubbles: true,
           }));
         }}
-        className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
+        className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
       >
         <Search className="h-3.5 w-3.5" />
         <span>Search runs…</span>
-        <kbd className="ml-2 rounded border border-border px-1.5 py-0.5 text-xs">⌘K</kbd>
+        <kbd className="ml-2 rounded-full border border-border px-1.5 py-0.5 text-xs">⌘K</kbd>
       </button>
 
       {/* Right side: theme toggle */}
       <div className="flex items-center gap-2">
         <button
           onClick={cycleTheme}
-          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
           title={`Theme: ${theme} (resolved: ${resolvedTheme})`}
         >
           <ThemeIcon className="h-4 w-4" />

@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
-  Bot,
   GitBranch,
   ListChecks,
   Settings,
@@ -31,8 +31,15 @@ export function Sidebar() {
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <Bot className="h-5 w-5" aria-hidden />
+      <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
+        <Image
+          src="/LazyDev-icon.jpeg"
+          alt="LazyDev logo"
+          width={128}
+          height={128}
+          sizes="32px"
+          className="h-8 w-8 rounded-xl border border-border object-cover shadow-sm"
+        />
         <span className="text-sm font-semibold">LazyDev</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">

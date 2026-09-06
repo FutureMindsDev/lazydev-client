@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useDashboardStore } from '@/stores/dashboard-store';
 import { StatusStrip } from '@/components/status-strip';
 import { KpiCard } from '@/components/kpi-card';
@@ -24,9 +25,33 @@ export default function OverviewPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 p-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Overview</h1>
-      </header>
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-border shadow-sm">
+        <Image
+          src="/lazydev-hero.jpeg"
+          alt="A developer sleeping peacefully on a bed next to a laptop that is running code during the day, with pull requests being opened automatically."
+          width={2752}
+          height={1536}
+          priority
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          className="h-32 w-full object-cover sm:h-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 flex items-center gap-3 p-4">
+          <Image
+            src="/LazyDev-icon.jpeg"
+            alt="LazyDev logo"
+            width={128}
+            height={128}
+            sizes="40px"
+            className="h-10 w-10 rounded-xl border border-border object-cover shadow-sm"
+          />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Overview</h1>
+            <p className="text-xs text-muted-foreground">LazyDev control plane</p>
+          </div>
+        </div>
+      </div>
 
       <StatusStrip />
 

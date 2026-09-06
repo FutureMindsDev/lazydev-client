@@ -1,21 +1,49 @@
 @import "tailwindcss";
 
-/*
- * LazyDev dashboard design tokens — dark-mode-first (plan §8).
- * Status color language: SUCCESS=emerald, FAILED=red, ACTIVE=blue,
- * WAITING=slate, RETRY=amber. Kept consistent everywhere.
- */
-:root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #3b82f6;
+/* Class-based dark mode (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* ============================================================
+   LazyDev cozy-core theme
+   Warm golden-hour palette: terracotta, amber, deep violet.
+   Soft, rounded, gentle gradients. Serene & effortless.
+   Status color language is preserved for dashboard semantics:
+   SUCCESS=emerald, FAILED=red, ACTIVE=blue, WAITING=slate, RETRY=amber.
+   ============================================================ */
+
+:root {
+  /* Warm cream background, soft not stark white */
+  --background: #fdf6ec;
+  --foreground: #3b2a2a;
+
+  /* Muted surfaces — warm sand */
+  --muted: #f3e7d3;
+  --muted-foreground: #8a6f64;
+
+  /* Borders — soft terracotta-tinted */
+  --border: #e8d5bd;
+  --input: #e8d5bd;
+  --card: #fffaf2;
+  --card-foreground: #3b2a2a;
+
+  /* Accent — terracotta (primary warm action color) */
+  --accent: #c8553d;
+  --accent-foreground: #fffaf2;
+
+  /* Primary maps to accent for backward compat with existing components */
+  --primary: #c8553d;
+  --primary-foreground: #fffaf2;
+
+  --ring: #c8553d;
+
+  /* Secondary accents exposed as utilities */
+  --amber: #e09f3e;
+  --violet: #5e2b79;
+  --violet-soft: #8b5fa6;
+  --terracotta: #c8553d;
+  --cream: #fdf6ec;
+
+  /* Status colors (dashboard semantics, kept consistent everywhere) */
   --success: #10b981;
   --failed: #ef4444;
   --active: #3b82f6;
@@ -23,6 +51,34 @@
   --retry: #f59e0b;
 
   --radius: 0.5rem;
+}
+
+.dark {
+  /* Deep cozy night — warm dark, not cold black */
+  --background: #1a1413;
+  --foreground: #f0e6d8;
+
+  --muted: #2a201d;
+  --muted-foreground: #b39a8a;
+
+  --border: #3a2d2a;
+  --input: #3a2d2a;
+  --card: #221a18;
+  --card-foreground: #f0e6d8;
+
+  --accent: #e09f3e;
+  --accent-foreground: #1a1413;
+
+  --primary: #e09f3e;
+  --primary-foreground: #1a1413;
+
+  --ring: #e09f3e;
+
+  --amber: #e09f3e;
+  --violet: #a87bc4;
+  --violet-soft: #c9a7e0;
+  --terracotta: #d96b4f;
+  --cream: #1a1413;
 }
 
 @theme inline {
@@ -35,40 +91,28 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  /* Cozy palette exposed to Tailwind utilities */
+  --color-amber: var(--amber);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-terracotta: var(--terracotta);
+  --color-cream: var(--cream);
+
+  /* Status colors */
   --color-success: var(--success);
   --color-failed: var(--failed);
   --color-active: var(--active);
   --color-waiting: var(--waiting);
   --color-retry: var(--retry);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-/* Dark mode: applied via .dark class on <html> (ThemeProvider) OR system preference */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #09090b;
-    --foreground: #ededed;
-    --card: #111113;
-    --card-foreground: #ededed;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #60a5fa;
-  }
-}
-
-.dark {
-  --background: #09090b;
-  --foreground: #ededed;
-  --card: #111113;
-  --card-foreground: #ededed;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #60a5fa;
+  --font-sans: var(--font-outfit), var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-display: var(--font-outfit), var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 /* Toast slide-in animation */
@@ -83,7 +127,46 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  /* Subtle warm gradient wash at the top of the page */
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--amber) 6%, transparent) 0%,
+    transparent 320px
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+/* Soft, rounded scrollbars to match the cozy aesthetic */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--terracotta) 50%, var(--muted));
+  border-radius: 9999px;
+  border: 3px solid var(--muted);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--terracotta);
+}
+
+/* Gentle focus rings in the warm accent */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Monospace for machine output: diffs, logs, taskIds, branch names (plan §8). */
