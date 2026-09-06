@@ -38,9 +38,21 @@ interface ListRunsParams {
   search?: string;
 }
 
+/**
+ * Reads the CSRF token from the ld_csrf cookie (set by the backend on login)
+ * for the double-submit cookie pattern. Returns undefined if no cookie is
+ * present (e.g. in Mode A / token mode where CSRF is not enforced).
+ */
+function getCsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(/(?:^|;\s*)ld_csrf=([^;]+)/);
+  return match?.[1];
+}
+
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { Accept: 'application/json' },
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new ApiError(res.status, `GET ${path} failed`, await res.text().catch(() => ''));
@@ -49,10 +61,16 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const csrf = getCsrfToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
+    },
     body: JSON.stringify(body),
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new ApiError(res.status, `POST ${path} failed`, await res.text().catch(() => ''));
@@ -61,10 +79,16 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function putJson<T>(path: string, body: unknown): Promise<T> {
+  const csrf = getCsrfToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
+    },
     body: JSON.stringify(body),
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new ApiError(res.status, `PUT ${path} failed`, await res.text().catch(() => ''));
@@ -73,9 +97,14 @@ async function putJson<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function deleteJson<T>(path: string): Promise<T> {
+  const csrf = getCsrfToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'DELETE',
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json',
+      ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
+    },
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new ApiError(res.status, `DELETE ${path} failed`, await res.text().catch(() => ''));
