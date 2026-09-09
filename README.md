@@ -1,6 +1,6 @@
 # LazyDev Dashboard — Frontend (Self-hosted)
 
-Control-plane UI for [LazyDev](https://github.com/FutureMindsDev/lazy-issue-resolver),
+Control-plane UI for [LazyDev](https://github.com/FutureMindsDev/lazydev-server),
 the AI-native autonomous CI assistant that monitors GitHub issues, generates
 validated code fixes, and pushes fix branches safely.
 
@@ -131,7 +131,7 @@ environment before running `pnpm build` so they're baked into the bundle.
 
 ## Related
 
-- **Backend**: [FutureMindsDev/lazy-issue-resolver](https://github.com/FutureMindsDev/lazy-issue-resolver) — NestJS + LangGraph + BullMQ + Qdrant
+- **Backend**: [FutureMindsDev/lazydev-server](https://github.com/FutureMindsDev/lazydev-server) — NestJS + LangGraph + BullMQ + Qdrant
 - **Backend API spec**: [`BACKEND_API_SPEC.md`](./BACKEND_API_SPEC.md)
 - **Verification checklist**: [`CHECKLIST.md`](./CHECKLIST.md)
 
