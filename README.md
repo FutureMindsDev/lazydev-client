@@ -132,9 +132,24 @@ environment before running `pnpm build` so they're baked into the bundle.
 ## Related
 
 - **Backend**: [FutureMindsDev/lazydev-server](https://github.com/FutureMindsDev/lazydev-server) — NestJS + LangGraph + BullMQ + Qdrant
+- **Intro site**: [LazyDev Intro](https://github.com/arkar-chanmyae/lazydev-intro) — marketing & documentation site
 - **Backend API spec**: [`BACKEND_API_SPEC.md`](./BACKEND_API_SPEC.md)
 - **Verification checklist**: [`CHECKLIST.md`](./CHECKLIST.md)
 
+## Authors
+
+LazyDev™ is built and maintained by **FutureMindsDev**.
+
+| Name | Role | GitHub |
+|------|------|--------|
+| Arkar Chan Myae | Co-Founder · Lead AI & Systems Architect | [@arkar-chanmyae](https://github.com/arkar-chanmyae) |
+| Khin Me Me Latt | Co-Founder · Software & Product Engineer | [@KhinMeMeLatt](https://github.com/KhinMeMeLatt) |
+
+> **FutureMindsDev** is an engineering lab building smart, futuristic technology solutions for developers and the public.
+> [github.com/FutureMindsDev](https://github.com/FutureMindsDev)
+
 ## License
 
-MIT
+MIT © 2026 [FutureMindsDev](https://github.com/FutureMindsDev)
+
+LazyDev™ is a trademark of FutureMindsDev.

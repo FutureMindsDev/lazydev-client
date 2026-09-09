@@ -25,11 +25,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("http://localhost:3000"),
-  title: "LazyDev Dashboard",
-  description: "Control plane UI for the Lazy Issue Resolver backend.",
+  title: "LazyDev™ Dashboard",
+  description: "Control-plane UI for LazyDev™ — the AI-native autonomous CI assistant that monitors GitHub issues, generates validated code fixes, and opens pull requests. Built by FutureMindsDev.",
+  authors: [
+    { name: "Arkar Chan Myae", url: "https://github.com/arkar-chanmyae" },
+    { name: "Khin Me Me Latt", url: "https://github.com/KhinMeMeLatt" },
+  ],
+  creator: "FutureMindsDev",
+  publisher: "FutureMindsDev",
+  keywords: ["LazyDev", "AI", "CI", "autonomous", "issue resolver", "LangGraph", "FutureMindsDev"],
   openGraph: {
-    title: "LazyDev Dashboard",
-    description: "Control plane UI for the Lazy Issue Resolver backend.",
+    title: "LazyDev™ Dashboard",
+    description: "Control-plane UI for the LazyDev autonomous CI assistant. Built by FutureMindsDev.",
     type: "website",
     images: [
       {
@@ -42,9 +49,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LazyDev Dashboard",
-    description: "Control plane UI for the Lazy Issue Resolver backend.",
+    title: "LazyDev™ Dashboard",
+    description: "Control-plane UI for the LazyDev autonomous CI assistant. Built by FutureMindsDev.",
     images: ["/lazydev-hero.jpeg"],
+    creator: "@FutureMindsDev",
   },
 };
 

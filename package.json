@@ -1,6 +1,14 @@
 {
   "name": "lazydev-frontend",
   "version": "0.1.0",
+  "description": "LazyDev™ Dashboard — control-plane UI for the LazyDev autonomous CI assistant. Built by FutureMindsDev.",
+  "author": "FutureMindsDev (Arkar Chan Myae <arkarchanmyae.dev@gmail.com> & Khin Me Me Latt)",
+  "homepage": "https://github.com/FutureMindsDev/lazydev-client",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FutureMindsDev/lazydev-client.git"
+  },
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",
