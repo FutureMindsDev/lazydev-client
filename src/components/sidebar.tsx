@@ -65,7 +65,7 @@ export function Sidebar() {
             className="h-8 w-8 rounded-xl border border-border object-cover shadow-sm"
           />
         )}
-        {!collapsed && <span className="flex-1 text-sm font-semibold">LazyDev</span>}
+        {!collapsed && <span className="flex-1 text-sm font-semibold">LazyDev™</span>}
         <button
           onClick={toggleCollapsed}
           className={cn(
@@ -109,15 +109,28 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer: mode label */}
+      {/* Footer: mode label + attribution */}
       <div className="shrink-0 border-t border-border p-2">
         {!collapsed ? (
-          <div className="flex items-center justify-between px-1 py-1">
-            <span className="text-xs text-muted-foreground">self-hosted mode</span>
-            <kbd className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
-              ⌘K
-            </kbd>
-          </div>
+          <>
+            <div className="flex items-center justify-between px-1 py-1">
+              <span className="text-xs text-muted-foreground">self-hosted mode</span>
+              <kbd className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
+                ⌘K
+              </kbd>
+            </div>
+            <p className="mt-1 px-1 text-[10px] leading-tight text-muted-foreground/60">
+              LazyDev™ by{' '}
+              <a
+                href="https://github.com/FutureMindsDev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline-offset-2 hover:underline"
+              >
+                FutureMindsDev
+              </a>
+            </p>
+          </>
         ) : null}
       </div>
     </aside>
