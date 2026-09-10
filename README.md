@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://drive.google.com/thumbnail?id=12Z0AzUqRPNO3WDE0_CGCjzCD4uDB5eDw&sz=w500" alt="FutureMindsDev Logo" width="500" style="border-radius: 50%;" />
+</div>
+
 # LazyDev Dashboard — Frontend (Self-hosted)
 
 Control-plane UI for [LazyDev](https://github.com/FutureMindsDev/lazydev-server),
@@ -8,6 +12,14 @@ This is the **self-hosted** distribution of the dashboard. It assumes a single
 LazyDev backend installation — there is no multi-tenant / hosted-mode code path.
 
 ## What this is
+
+<div align="center">
+  <img
+  src="https://drive.google.com/thumbnail?id=18dtk_f-nraHFy2wU__TWWaDHA7oFTapT&sz=w1000"
+  alt="Project Screenshot"
+  width="700"
+  />
+</div>
 
 A Next.js 16 dashboard that makes the LazyDev AI pipeline a glass box:
 
