@@ -227,6 +227,7 @@ export const mockRun = (taskId: string): RunDetailDto | undefined => {
     implementationPlan: `## Implementation Plan\n1. Add \`inUse: boolean\` flag to Connection class\n2. Modify \`acquire()\` to find idle connections\n3. Modify \`release()\` to set \`inUse = false\``,
     pipelineStages: makePipelineStages(run, idx),
     feedbackStatus: { pending: false, submittedAt: null },
+    gateSummary: null,
   };
 };
 
@@ -358,6 +359,16 @@ export const mockSettings = (): SettingsDto => ({
     updatedAt: null,
   },
   providers: [],
+  guard: {
+    regexAlwaysOn: true,
+    clefEnabled: false,
+    clefConfigured: false,
+    clefModel: 'clef-flash',
+    blockAt: 0.8,
+    quarantineAt: 0.4,
+    provider: 'clef-workers',
+    fallback: 'clef-workers',
+  },
   sandbox: {
     networkMode: 'restricted',
     timeout: 120,

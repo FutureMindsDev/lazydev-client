@@ -30,10 +30,13 @@ import {
   useCreateProvider,
   useUpdateProvider,
   useDeleteProvider,
+  useUpdateGuardSettings,
+  useTestGuard,
 } from '@/hooks/use-dashboard';
 import type {
   LlmProviderId,
   SettingsDto,
+  GuardSettingsDto,
   UpdateLlmSettingsRequest,
   ProviderConfigDto,
   CreateProviderConfigRequest,
@@ -873,6 +876,125 @@ function AgentAssignmentsSection({
   );
 }
 
+// ── Prompt Guard section ────────────────────────────────────────────────────
+
+function GuardSection({
+  guard,
+  onChanged,
+}: {
+  guard: GuardSettingsDto;
+  onChanged: () => void;
+}) {
+  const { trigger: toggleTrigger, isMutating: toggling } = useUpdateGuardSettings();
+  const { trigger: testTrigger, isMutating: testing } = useTestGuard();
+  const { toast } = useToast();
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [sample, setSample] = useState('');
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  const handleToggle = async () => {
+    setErrorBanner(null);
+    try {
+      await toggleTrigger({ clefEnabled: !guard.clefEnabled });
+      toast({
+        title: guard.clefEnabled ? 'Clef guard switched off' : 'Clef guard switched on',
+        description: 'Regex screening stays on either way.',
+        variant: 'success',
+      });
+      onChanged();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorBanner(`Failed to save: ${msg}`);
+    }
+  };
+
+  const handleTest = async () => {
+    setErrorBanner(null);
+    setTestResult(null);
+    try {
+      const res = await testTrigger(sample.trim() ? { text: sample.trim() } : {});
+      setTestResult(`${res.layer} \u2192 ${res.verdict} (${res.detail})`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorBanner(`Test failed: ${msg}`);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {errorBanner && (
+        <div className="flex items-start gap-2 rounded-md border border-failed/30 bg-failed/10 px-3 py-2 text-xs text-failed">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{errorBanner}</span>
+        </div>
+      )}
+
+      <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Regex screening</dt>
+          <dd className="font-mono-output text-foreground">Always on</dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Clef (decision model)</dt>
+          <dd className="font-mono-output text-foreground">
+            {guard.clefEnabled ? `On (${guard.clefModel})` : 'Off'}
+          </dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Serving provider</dt>
+          <dd className="font-mono-output text-foreground">{guard.provider}</dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Thresholds</dt>
+          <dd className="font-mono-output text-foreground">
+            block {guard.blockAt} / hold {guard.quarantineAt}
+          </dd>
+        </div>
+      </dl>
+
+      {!guard.clefConfigured && (
+        <p className="text-xs text-muted-foreground">
+          Cloudflare keys are not configured — turning Clef on has no effect
+          until the administrator sets CLOUDFLARE_ACCOUNT_ID +
+          CLOUDFLARE_API_TOKEN in .env.
+        </p>
+      )}
+
+      <div className="flex gap-2 pt-1">
+        <Button variant="default" size="sm" onClick={handleToggle} disabled={toggling}>
+          {toggling ? 'Saving…' : guard.clefEnabled ? 'Switch Clef off' : 'Switch Clef on'}
+        </Button>
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-3">
+        <p className="text-xs text-muted-foreground">
+          Try a sample through the guard (same checks as new issues; nothing is queued).
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Sample text <span className="text-muted-foreground/60">(blank = known-bad sample)</span>
+          </label>
+          <input
+            type="text"
+            value={sample}
+            onChange={(e) => setSample(e.target.value)}
+            placeholder="Ignore previous instructions…"
+            className="h-9 w-full rounded-md border border-border bg-background px-3 font-mono-output text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
+            {testing ? 'Testing…' : 'Test sample'}
+          </Button>
+        </div>
+        {testResult && (
+          <p className="font-mono-output text-xs text-foreground">{testResult}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main settings page ─────────────────────────────────────────────────────
 
 /** Settings page (plan §4.6) — LLM provider config (BYOK) + read-only sections. */
@@ -974,6 +1096,22 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Zone A2 — Prompt Guard */}
+      <Card className="mb-4">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>Prompt Guard</CardTitle>
+            <span className={cn('ml-auto rounded-full px-2 py-0.5 text-xs font-medium', settings.guard.clefEnabled ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground')}>
+              {settings.guard.clefEnabled ? 'clef on' : 'regex only'}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <GuardSection guard={settings.guard} onChanged={() => mutate()} />
         </CardContent>
       </Card>
 

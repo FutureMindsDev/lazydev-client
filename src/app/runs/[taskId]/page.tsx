@@ -124,6 +124,23 @@ export default function RunDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Gate verdict banner */}
+      {run.gateSummary && (
+        <div className="mb-5 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/10 p-4">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-failed" />
+          <div>
+            <p className="text-sm font-medium text-failed">
+              Stopped by {run.gateSummary.stoppedBy} ({run.gateSummary.decision}
+              {run.gateSummary.risk ? `, ${run.gateSummary.risk} risk` : ''})
+            </p>
+            <p className="text-xs text-muted-foreground">{run.gateSummary.reason}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Approve below to re-run (approvals skip the gate that stopped it).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Unapplied changes warning */}
       {run.unappliedChanges && (
         <div className="mb-5 flex items-start gap-2 rounded-lg border border-retry/30 bg-retry/10 p-4">

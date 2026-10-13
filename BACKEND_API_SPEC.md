@@ -67,6 +67,12 @@ interface DashboardMeta {
     avatarUrl: string;
     installations: number[];
   };
+  /** Prompt guard status (no secrets). Added with the guard feature. */
+  promptGuard?: {
+    enabled: boolean;
+    clefActive: boolean;
+    provider: string;
+  };
 }
 ```
 
@@ -458,8 +464,61 @@ interface SettingsDto {
 }
 ```
 
+`SettingsDto` also carries a `guard` block (prompt guard status) and
+`RunDetailDto` carries `gateSummary` (gate verdict banner, null when no
+gate stopped/flagged the run or the 24h record expired):
+
+```typescript
+interface GuardSettingsDto {
+  regexAlwaysOn: boolean;   // always true — regex layer has no switch
+  clefEnabled: boolean;     // effective switch (env AND stored flag)
+  clefConfigured: boolean;  // Cloudflare account + token present?
+  clefModel: string;        // e.g. "clef-flash"
+  blockAt: number;          // e.g. 0.8
+  quarantineAt: number;     // e.g. 0.4
+  provider: string;         // serving decision provider id
+  fallback: string;         // fallback provider id
+}
+
+interface GateSummary {
+  stoppedBy: 'triage' | 'patch-gate' | 'validation-gate';
+  decision: string;         // e.g. "quarantine" | "abort" | "validate"
+  risk?: string | null;     // e.g. "medium"
+  reason: string;           // plain words, no secrets
+}
+```
+
 **CRITICAL:** All secrets must be masked. Never return raw API keys,
 webhook URLs, or database hosts. The frontend displays these read-only.
+
+---
+
+### 12a. `PUT /api/dashboard/settings/guard` — Clef toggle
+
+**Called by:** Settings page → Prompt Guard card.
+
+```typescript
+@Put('settings/guard')
+async updateGuardSettings(@Body() body: { clefEnabled: boolean }): Promise<GuardSettingsDto>
+```
+
+Flips the stored flag. Env `PROMPT_GUARD_CLEF_ENABLED=false` always wins —
+the response shows the EFFECTIVE state, so the UI can hint at enabling it
+in `.env` when the toggle won't stick. Never returns the API token.
+
+---
+
+### 12b. `POST /api/dashboard/settings/guard/test` — eval sample
+
+**Called by:** Settings page → Prompt Guard card → "Test sample".
+
+```typescript
+@Post('settings/guard/test')
+async testGuard(@Body() body: { text?: string }): Promise<{ layer: string; verdict: string; detail: string }>
+```
+
+Runs one text through the same layers ingestion uses (regex, then the
+decision provider). Blank text uses a known-bad sample. Stores nothing.
 
 ---
 
