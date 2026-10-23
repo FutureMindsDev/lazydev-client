@@ -16,15 +16,17 @@ This distribution supports a single self-hosted backend installation only —
 there is no multi-tenant / hosted-mode code path.
 
 ### Commands
-- `pnpm dev` — dev server on :3000 (mocks enabled by default)
+- `pnpm dev` — dev server on :3000 (real backend; mocks are opt-in only)
 - `pnpm build` — production build (Turbopack)
 - `pnpm lint` — eslint
 - `pnpm start` — serve production build
 
 ### Mock vs real backend
-- `NEXT_PUBLIC_ENABLE_MOCKS=true` (default): MSW intercepts API calls; no
-  backend needed. Set to `false` in `.env.local` to hit the real backend at
-  `NEXT_PUBLIC_API_URL` (default `http://localhost:3200`).
+- Default (no flag): every call hits the real backend at `NEXT_PUBLIC_API_URL`
+  — no default fallback exists; the env var must be set or API calls throw.
+- `NEXT_PUBLIC_ENABLE_MOCKS=true` (opt-in only): MSW intercepts API calls;
+  no backend needed. Set to `false` or omit in `.env.local` for the real
+  backend.
 - The `/metrics` mock fixture mirrors the real backend response shape exactly
   (`src/mocks/data.ts`), so flipping the flag needs zero component changes.
 

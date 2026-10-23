@@ -46,7 +46,20 @@ import type {
   UpdateProviderConfigRequest,
 } from './types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
+/**
+ * Resolves the backend base URL. There is no default fallback: if
+ * NEXT_PUBLIC_API_URL is not configured, calls fail loudly instead of
+ * silently targeting a guess.
+ */
+export function apiBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (!url) {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL is not configured. Set it in .env.local (e.g. http://localhost:3200).',
+    );
+  }
+  return url;
+}
 
 interface ListRunsParams {
   repo?: string;
@@ -68,7 +81,7 @@ function getCsrfToken(): string | undefined {
 }
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${apiBaseUrl()}${path}`, {
     headers: { Accept: 'application/json' },
     credentials: 'include',
   });
@@ -80,7 +93,7 @@ async function getJson<T>(path: string): Promise<T> {
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const csrf = getCsrfToken();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${apiBaseUrl()}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -98,7 +111,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 
 async function putJson<T>(path: string, body: unknown): Promise<T> {
   const csrf = getCsrfToken();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${apiBaseUrl()}${path}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -116,7 +129,7 @@ async function putJson<T>(path: string, body: unknown): Promise<T> {
 
 async function deleteJson<T>(path: string): Promise<T> {
   const csrf = getCsrfToken();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${apiBaseUrl()}${path}`, {
     method: 'DELETE',
     headers: {
       Accept: 'application/json',
