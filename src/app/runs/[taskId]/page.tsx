@@ -220,7 +220,7 @@ export default function RunDetailPage() {
               Click &quot;Connect&quot; to subscribe to live SSE events from the backend.
               <br />
               <span className="text-xs">
-                Requires the real backend at {process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200'} with mocks disabled.
+                Requires the real backend (NEXT_PUBLIC_API_URL) with mocks disabled.
               </span>
             </p>
           ) : (

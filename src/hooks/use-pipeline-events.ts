@@ -17,8 +17,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PipelineEvent, PipelineStage } from '@/lib/types';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
+import { apiBaseUrl } from '@/lib/api';
 
 /**
  * Real SSE subscription to GET /api/dashboard/events?taskId=… (plan §9 Phase 3).
@@ -82,7 +81,7 @@ export function usePipelineEvents(taskId: string | null, enabled: boolean) {
     setError(null);
     setIsLive(true);
 
-    const url = `${BASE_URL}/api/dashboard/events?taskId=${encodeURIComponent(taskId)}`;
+    const url = `${apiBaseUrl()}/api/dashboard/events?taskId=${encodeURIComponent(taskId)}`;
     const source = new EventSource(url);
     sourceRef.current = source;
 
