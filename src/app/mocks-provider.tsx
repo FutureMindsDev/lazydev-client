@@ -17,13 +17,15 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 
-const ENABLE_MOCKS = process.env.NEXT_PUBLIC_ENABLE_MOCKS !== 'false';
+const ENABLE_MOCKS = process.env.NEXT_PUBLIC_ENABLE_MOCKS === 'true';
 
 /**
  * Initializes the MSW service worker on the client when mocks are enabled.
  *
- * Gate is NEXT_PUBLIC_ENABLE_MOCKS (default: enabled). Set to 'false' in
- * .env.local to hit the real backend at NEXT_PUBLIC_API_URL.
+ * Gate is NEXT_PUBLIC_ENABLE_MOCKS='true' (default: disabled). Mocks are an
+ * explicit opt-in for development without a backend; when the flag is unset
+ * or anything other than 'true', every fetch targets the real backend at
+ * NEXT_PUBLIC_API_URL.
  *
  * Robust against environments where service workers can't register (e.g.
  * browser preview proxies): if worker.start() rejects or times out, we

@@ -36,8 +36,6 @@ import type {
   UpdateProviderConfigRequest,
 } from '@/lib/types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3200';
-
 // Small artificial delay so loading states are visible in the UI.
 const LATENCY = 300;
 
@@ -64,18 +62,18 @@ let mockGuardState: GuardSettingsDto = {
 
 export const handlers = [
   // ── Dashboard ──────────────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/metrics`, async () => {
+  http.get(`/api/dashboard/metrics`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockMetrics());
   }),
 
-  http.get(`${BASE}/api/dashboard/meta`, async () => {
+  http.get(`/api/dashboard/meta`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockMeta());
   }),
 
   // ── Runs ───────────────────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/runs`, async ({ request }) => {
+  http.get(`/api/dashboard/runs`, async ({ request }) => {
     await delay(LATENCY);
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get('limit') ?? '50');
@@ -85,19 +83,19 @@ export const handlers = [
     return HttpResponse.json(mockRuns(limit, offset, status ?? undefined, search));
   }),
 
-  http.get(`${BASE}/api/dashboard/runs/:taskId`, async ({ params }) => {
+  http.get(`/api/dashboard/runs/:taskId`, async ({ params }) => {
     await delay(LATENCY);
     const run = mockRun(String(params.taskId));
     if (!run) return new HttpResponse(null, { status: 404 });
     return HttpResponse.json(run);
   }),
 
-  http.get(`${BASE}/api/dashboard/runs/:taskId/feedback-status`, async ({ params }) => {
+  http.get(`/api/dashboard/runs/:taskId/feedback-status`, async ({ params }) => {
     await delay(LATENCY);
     return HttpResponse.json(mockFeedbackStatus(String(params.taskId)));
   }),
 
-  http.post(`${BASE}/api/dashboard/runs/:taskId/feedback`, async ({ request }) => {
+  http.post(`/api/dashboard/runs/:taskId/feedback`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as { feedback?: string };
     if (!body.feedback?.trim()) {
@@ -109,13 +107,13 @@ export const handlers = [
     return HttpResponse.json({ ok: true, pending: true });
   }),
 
-  http.post(`${BASE}/api/dashboard/repos/:repo/issues/:number/retry`, async () => {
+  http.post(`/api/dashboard/repos/:repo/issues/:number/retry`, async () => {
     await delay(LATENCY);
     return HttpResponse.json({ ok: true, taskId: `task-${Date.now().toString(36)}` });
   }),
 
   // ── Queues ─────────────────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/queues/:name/jobs`, async ({ request }) => {
+  http.get(`/api/dashboard/queues/:name/jobs`, async ({ request }) => {
     await delay(LATENCY);
     const url = new URL(request.url);
     const state = url.searchParams.get('state') ?? undefined;
@@ -124,29 +122,29 @@ export const handlers = [
     return HttpResponse.json(mockJobs(state, limit, offset));
   }),
 
-  http.post(`${BASE}/api/dashboard/queues/:name/jobs/:id/retry`, async () => {
+  http.post(`/api/dashboard/queues/:name/jobs/:id/retry`, async () => {
     await delay(LATENCY);
     return HttpResponse.json({ ok: true });
   }),
 
-  http.post(`${BASE}/api/dashboard/queues/:name/drain`, async () => {
+  http.post(`/api/dashboard/queues/:name/drain`, async () => {
     await delay(LATENCY);
     return HttpResponse.json({ ok: true, count: 6 });
   }),
 
   // ── Repositories ───────────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/repos`, async () => {
+  http.get(`/api/dashboard/repos`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockRepos());
   }),
 
-  http.post(`${BASE}/api/dashboard/repos/:id/resync`, async () => {
+  http.post(`/api/dashboard/repos/:id/resync`, async () => {
     await delay(LATENCY);
     return HttpResponse.json({ ok: true });
   }),
 
   // ── Settings ───────────────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/settings`, async () => {
+  http.get(`/api/dashboard/settings`, async () => {
     await delay(LATENCY);
     const base = mockSettings();
     if (mockByokState.configured) {
@@ -159,7 +157,7 @@ export const handlers = [
     return HttpResponse.json(base);
   }),
 
-  http.put(`${BASE}/api/dashboard/settings/llm`, async ({ request }) => {
+  http.put(`/api/dashboard/settings/llm`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as UpdateLlmSettingsRequest;
     mockByokState = {
@@ -182,14 +180,14 @@ export const handlers = [
   }),
 
   // ── Prompt guard ───────────────────────────────────────────────────────
-  http.put(`${BASE}/api/dashboard/settings/guard`, async ({ request }) => {
+  http.put(`/api/dashboard/settings/guard`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as UpdateGuardSettingsRequest;
     mockGuardState = { ...mockGuardState, clefEnabled: body.clefEnabled };
     return HttpResponse.json(mockGuardState);
   }),
 
-  http.post(`${BASE}/api/dashboard/settings/guard/test`, async ({ request }) => {
+  http.post(`/api/dashboard/settings/guard/test`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as TestGuardRequest;
     const text = (body.text || '').toLowerCase();
@@ -204,19 +202,19 @@ export const handlers = [
     );
   }),
 
-  http.delete(`${BASE}/api/dashboard/settings/llm`, async () => {
+  http.delete(`/api/dashboard/settings/llm`, async () => {
     await delay(LATENCY);
     mockByokState = { configured: false, scope: null, baseUrl: null, model: null, agentModelOverrides: null, agentAssignments: null, apiKeyHint: null, updatedAt: null };
     return HttpResponse.json({ ok: true });
   }),
 
   // ── Provider config CRUD (multi-provider) ───────────────────────────────
-  http.get(`${BASE}/api/dashboard/settings/providers`, async () => {
+  http.get(`/api/dashboard/settings/providers`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockProviders);
   }),
 
-  http.post(`${BASE}/api/dashboard/settings/providers`, async ({ request }) => {
+  http.post(`/api/dashboard/settings/providers`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as CreateProviderConfigRequest;
     if (!body.label?.trim() || !body.apiKey?.trim() || !body.model?.trim()) {
@@ -237,7 +235,7 @@ export const handlers = [
     return HttpResponse.json(provider);
   }),
 
-  http.put(`${BASE}/api/dashboard/settings/providers/:id`, async ({ params, request }) => {
+  http.put(`/api/dashboard/settings/providers/:id`, async ({ params, request }) => {
     await delay(LATENCY);
     const id = String(params.id);
     const body = (await request.json()) as UpdateProviderConfigRequest;
@@ -263,7 +261,7 @@ export const handlers = [
     return HttpResponse.json(mockProviders.find((p) => p.id === id)!);
   }),
 
-  http.delete(`${BASE}/api/dashboard/settings/providers/:id`, async ({ params }) => {
+  http.delete(`/api/dashboard/settings/providers/:id`, async ({ params }) => {
     await delay(LATENCY);
     const id = String(params.id);
     mockProviders = mockProviders.filter((p) => p.id !== id);
@@ -279,13 +277,13 @@ export const handlers = [
   }),
 
   // ── Grafana (Phase 3) ──────────────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/grafana`, async () => {
+  http.get(`/api/dashboard/grafana`, async () => {
     await delay(LATENCY);
     return HttpResponse.json(mockGrafana());
   }),
 
   // ── Repo index stats (Phase 3) ─────────────────────────────────────────
-  http.get(`${BASE}/api/dashboard/repos/:id/stats`, async ({ params }) => {
+  http.get(`/api/dashboard/repos/:id/stats`, async ({ params }) => {
     await delay(LATENCY);
     return HttpResponse.json(mockRepoStats(String(params.id)));
   }),
@@ -293,7 +291,7 @@ export const handlers = [
   // ── SSE events (Phase 3) — MSW doesn't support real SSE, so this returns
   // a simple JSON response. The usePipelineEvents hook uses native EventSource
   // which bypasses MSW in dev mode. This handler exists for completeness.
-  http.get(`${BASE}/api/dashboard/events`, async ({ request }) => {
+  http.get(`/api/dashboard/events`, async ({ request }) => {
     const url = new URL(request.url);
     const taskId = url.searchParams.get('taskId') ?? 'unknown';
     return new HttpResponse(
