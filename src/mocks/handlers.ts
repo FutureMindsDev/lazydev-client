@@ -27,6 +27,9 @@ import {
 } from './data';
 import type {
   ByokSettingsDto,
+  GuardSettingsDto,
+  TestGuardRequest,
+  UpdateGuardSettingsRequest,
   UpdateLlmSettingsRequest,
   ProviderConfigDto,
   CreateProviderConfigRequest,
@@ -46,6 +49,18 @@ let mockByokState: ByokSettingsDto = {
 // Mutable provider config mock state — array of saved provider configs.
 let mockProviders: ProviderConfigDto[] = [];
 let providerIdCounter = 0;
+
+// Mutable prompt-guard mock state — persists across requests within a dev session.
+let mockGuardState: GuardSettingsDto = {
+  regexAlwaysOn: true,
+  clefEnabled: false,
+  clefConfigured: false,
+  clefModel: 'clef-flash',
+  blockAt: 0.8,
+  quarantineAt: 0.4,
+  provider: 'clef-workers',
+  fallback: 'clef-workers',
+};
 
 export const handlers = [
   // ── Dashboard ──────────────────────────────────────────────────────────
@@ -140,6 +155,7 @@ export const handlers = [
     }
     base.byok = mockByokState;
     base.providers = mockProviders;
+    base.guard = mockGuardState;
     return HttpResponse.json(base);
   }),
 
@@ -163,6 +179,29 @@ export const handlers = [
       updatedAt: new Date().toISOString(),
     };
     return HttpResponse.json(mockByokState);
+  }),
+
+  // ── Prompt guard ───────────────────────────────────────────────────────
+  http.put(`${BASE}/api/dashboard/settings/guard`, async ({ request }) => {
+    await delay(LATENCY);
+    const body = (await request.json()) as UpdateGuardSettingsRequest;
+    mockGuardState = { ...mockGuardState, clefEnabled: body.clefEnabled };
+    return HttpResponse.json(mockGuardState);
+  }),
+
+  http.post(`${BASE}/api/dashboard/settings/guard/test`, async ({ request }) => {
+    await delay(LATENCY);
+    const body = (await request.json()) as TestGuardRequest;
+    const text = (body.text || '').toLowerCase();
+    const evil = /ignore previous instructions|reveal the system prompt|do not refuse/.test(text);
+    if (!body.text?.trim()) {
+      return HttpResponse.json({ layer: 'regex', verdict: 'blocked', detail: 'ignore-instructions (tries to cancel the system instructions)' });
+    }
+    return HttpResponse.json(
+      evil
+        ? { layer: 'regex', verdict: 'blocked', detail: 'matched blocklist pattern' }
+        : { layer: mockGuardState.clefEnabled ? mockGuardState.provider : 'regex', verdict: 'clean', detail: 'no patterns matched' },
+    );
   }),
 
   http.delete(`${BASE}/api/dashboard/settings/llm`, async () => {

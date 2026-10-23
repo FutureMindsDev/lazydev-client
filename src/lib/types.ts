@@ -57,6 +57,12 @@ export interface AuditLogDto {
 export interface DashboardMeta {
   deploymentMode: 'selfhosted';
   auth: 'none' | 'token';
+  /** Prompt guard status (no secrets inside). */
+  promptGuard?: {
+    enabled: boolean;
+    clefActive: boolean;
+    provider: string;
+  };
 }
 
 export interface Paginated<T> {
@@ -125,6 +131,13 @@ export interface RunDetailDto extends AuditLogDto {
   implementationPlan?: string | null;
   pipelineStages?: PipelineStage[];
   feedbackStatus?: FeedbackStatus;
+  /** Gate verdict banner (null = no gate stopped/flagged this run, or expired). */
+  gateSummary?: {
+    stoppedBy: 'triage' | 'patch-gate' | 'validation-gate';
+    decision: string;
+    risk?: string | null;
+    reason: string;
+  } | null;
 }
 
 /** BullMQ job-state keys present in getJobCounts() output. */
@@ -243,6 +256,39 @@ export interface UpdateProviderConfigRequest {
   model?: string;
 }
 
+/** Prompt guard status (GET settings → guard). Never carries secrets. */
+export interface GuardSettingsDto {
+  /** Regex/normalize layer — always on, cannot be switched off. */
+  regexAlwaysOn: boolean;
+  /** Effective Clef switch (env AND stored flag). */
+  clefEnabled: boolean;
+  /** Cloudflare account + token present? */
+  clefConfigured: boolean;
+  clefModel: string;
+  blockAt: number;
+  quarantineAt: number;
+  /** Serving decision provider + fallback (ids, for the dropdown). */
+  provider: string;
+  fallback: string;
+}
+
+/** Body for PUT /api/dashboard/settings/guard (Clef toggle). */
+export interface UpdateGuardSettingsRequest {
+  clefEnabled: boolean;
+}
+
+/** Body for POST /api/dashboard/settings/guard/test (eval sample). */
+export interface TestGuardRequest {
+  text?: string;
+}
+
+/** Response for POST /api/dashboard/settings/guard/test. */
+export interface GuardTestResponse {
+  layer: string;
+  verdict: string;
+  detail: string;
+}
+
 /** Settings/config display — secrets masked, with BYOK LLM config support. */
 export interface SettingsDto {
   llm: {
@@ -255,6 +301,8 @@ export interface SettingsDto {
   byok: ByokSettingsDto;
   /** Saved provider configs that can be assigned to specific agents. */
   providers: ProviderConfigDto[];
+  /** Prompt guard status. */
+  guard: GuardSettingsDto;
   sandbox: {
     networkMode: 'none' | 'restricted' | 'unrestricted';
     timeout: number;

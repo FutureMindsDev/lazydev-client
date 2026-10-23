@@ -22,12 +22,16 @@ import type {
   ByokSettingsDto,
   DashboardMeta,
   FeedbackStatus,
+  GuardSettingsDto,
+  GuardTestResponse,
   PaginatedJobs,
   ProviderConfigDto,
   RepositoryDto,
   RunDetailDto,
   RunStatus,
   SettingsDto,
+  TestGuardRequest,
+  UpdateGuardSettingsRequest,
   UpdateLlmSettingsRequest,
   CreateProviderConfigRequest,
   UpdateProviderConfigRequest,
@@ -118,6 +122,26 @@ export function useDeleteLlmSettings() {
     {
       onSuccess: () => mutate('settings'),
     },
+  );
+}
+
+/** PUT /api/dashboard/settings/guard — flips the stored Clef toggle. */
+export function useUpdateGuardSettings() {
+  const { mutate } = useSWRConfig();
+  return useSWRMutation<GuardSettingsDto, Error, string, UpdateGuardSettingsRequest>(
+    'settings/guard',
+    (_key, { arg }) => api.updateGuardSettings(arg),
+    {
+      onSuccess: () => mutate('settings'),
+    },
+  );
+}
+
+/** POST /api/dashboard/settings/guard/test — runs an eval sample (no cache change). */
+export function useTestGuard() {
+  return useSWRMutation<GuardTestResponse, Error, string, TestGuardRequest>(
+    'settings/guard-test',
+    (_key, { arg }) => api.testGuard(arg),
   );
 }
 

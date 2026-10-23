@@ -29,6 +29,8 @@ import type {
   FeedbackResponse,
   FeedbackStatus,
   GrafanaConfig,
+  GuardSettingsDto,
+  GuardTestResponse,
   Paginated,
   PaginatedJobs,
   RepoIndexStats,
@@ -36,6 +38,8 @@ import type {
   RunDetailDto,
   RunStatus,
   SettingsDto,
+  TestGuardRequest,
+  UpdateGuardSettingsRequest,
   UpdateLlmSettingsRequest,
   ProviderConfigDto,
   CreateProviderConfigRequest,
@@ -235,6 +239,18 @@ export const api = {
   /** DELETE /api/dashboard/settings/llm — remove BYOK config. */
   deleteLlmSettings(): Promise<{ ok: boolean }> {
     return deleteJson<{ ok: boolean }>('/api/dashboard/settings/llm');
+  },
+
+  // ── Prompt guard ──────────────────────────────────────────────────────
+
+  /** PUT /api/dashboard/settings/guard — flip the stored Clef toggle. */
+  updateGuardSettings(body: UpdateGuardSettingsRequest): Promise<GuardSettingsDto> {
+    return putJson<GuardSettingsDto>('/api/dashboard/settings/guard', body);
+  },
+
+  /** POST /api/dashboard/settings/guard/test — run an eval sample through the guard. */
+  testGuard(body: TestGuardRequest): Promise<GuardTestResponse> {
+    return postJson<GuardTestResponse>('/api/dashboard/settings/guard/test', body);
   },
 
   // ── Provider config CRUD (multi-provider) ───────────────────────────────
