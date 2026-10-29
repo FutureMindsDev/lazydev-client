@@ -323,6 +323,8 @@ export interface SettingsDto {
 
 /** A single run row for the recent-runs table (subset of AuditLogDto). */
 export interface RecentRun {
+  /** audit_logs primary key — unique even when taskId repeats (retries). */
+  id: string;
   taskId: string;
   issueNumber: number;
   issueTitle: string;

@@ -36,6 +36,7 @@ export function deriveRecentRuns(runs: AuditLogDto[], limit: number): RecentRun[
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, limit)
     .map((r) => ({
+      id: r.id,
       taskId: r.taskId,
       issueNumber: r.issueNumber,
       issueTitle: r.issueTitle,
