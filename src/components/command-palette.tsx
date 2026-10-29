@@ -105,7 +105,7 @@ export function CommandPalette() {
           ) : (
             results.map((run, i) => (
               <button
-                key={run.taskId}
+                key={run.id}
                 onClick={() => navigate(run.taskId)}
                 onMouseEnter={() => setSelectedIdx(i)}
                 className={cn(

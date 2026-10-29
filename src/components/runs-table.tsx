@@ -122,7 +122,7 @@ export function RunsTable() {
                 </thead>
                 <tbody>
                   {runs.map((run) => (
-                    <tr key={run.taskId} className="border-b border-border last:border-0 hover:bg-muted/50">
+                    <tr key={run.id} className="border-b border-border last:border-0 hover:bg-muted/50">
                       <td className="px-5 py-2.5 align-middle">
                         <StatusBadge status={run.status} />
                       </td>

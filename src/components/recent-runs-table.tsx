@@ -66,7 +66,7 @@ export function RecentRunsTable() {
               <tbody>
                 {recentRuns.map((run) => (
                   <tr
-                    key={run.taskId}
+                    key={run.id}
                     className="border-b border-border last:border-0 hover:bg-muted/50"
                   >
                     <td className="px-5 py-2.5 align-middle">
